@@ -68,34 +68,40 @@
         gameScene = new Container();
         app.stage.addChild(gameScene);
 //Buttons
-        let leftButton = new Sprite(resources.left_button.texture);
-        leftButton.interactive = true;
-        leftButton.buttonMode = true;
-        leftButton.anchor.set(0.5);
-        leftButton.scale.set(0.08);
-        leftButton.position.set(leftButton.width / 2, window.innerHeight - leftButton.height / 2);
-        leftButton
-            .on('pointerdown', onButtonDown)
-            .on('pointerup', onButtonUp)
-            .on('pointerupoutside', onButtonUp);
-            // .on('pointerover', onButtonOver)
-            // .on('pointerout', onButtonOut);
-        gameScene.addChild(leftButton);
+        let leftButton = button(0);
+        let upButton = button(1);
+        let rightButton = button(2);
+        let downButton = button(3);
+        //     new Sprite(resources.left_button.texture);
+        // leftButton.interactive = true;
+        // leftButton.buttonMode = true;
+        // leftButton.anchor.set(0.5);
+        // leftButton.scale.set(0.08);
+        // leftButton.position.set(leftButton.width , window.innerHeight - leftButton.height);
+        // leftButton
+        //     .on('pointerdown', onButtonDown)
+        //     .on('pointerup', onButtonUp)
+        //     .on('pointerupoutside', onButtonUp);
+        //     // .on('pointerover', onButtonOver)
+        //     // .on('pointerout', onButtonOut);
+        // gameScene.addChild(leftButton);
+
+
 // Sprites
         hero = new Sprite(resources.hero_img.texture);
         hero.position.set(window.innerWidth / 2, window.innerHeight / 2);
         hero.interactive = true;
         hero.buttonMode = true;
         hero.anchor.set(0.5);
-        hero
-            .on('mousedown', onDragStart)
-            .on('mouseup', onDragEnd)
-            .on('mouseupoutside', onDragEnd)
-            .on('mousemove', onDragMove)
-            .on('touchstart', onDragStart)
-            .on('touchend', onDragEnd)
-            .on('touchendoutside', onDragEnd)
-            .on('touchmove', onDragMove);
+        // hero
+        //     .on('mousedown', onDragStart)
+        //     .on('mouseup', onDragEnd)
+        //     .on('mouseupoutside', onDragEnd)
+        //     .on('mousemove', onDragMove)
+        //     .on('touchstart', onDragStart)
+        //     .on('touchend', onDragEnd)
+        //     .on('touchendoutside', onDragEnd)
+        //     .on('touchmove', onDragMove);
 
         hero.vx = 0;
         hero.vy = 0;
@@ -131,7 +137,7 @@
 
 //Health bar
         healthBar = new Container();
-        healthBar.position.set(app.stage.width - 170, 4);
+        healthBar.position.set(50, 10);
         gameScene.addChild(healthBar);
 
         //Create the black background rectangle
@@ -298,25 +304,6 @@
         }
     }
 
-    function onButtonDown() {
-        this.isdown = true;
-        this.alpha = 0.5;
-        hero.vx = -5;
-        hero.vy = 0;
-    }
-
-    function onButtonUp() {
-        this.isdown = false;
-        if (this.isOver) {
-
-            this.alpha = 0.5;
-        }
-        else {
-            hero.vx = 0;
-            hero.vy = 0;
-            this.alpha = 1;
-        }
-    }
 
     function onButtonOver() {
         this.isOver = true;
@@ -369,6 +356,51 @@
             "keyup", key.upHandler.bind(key), false
         );
         return key;
+    }
+
+    function button(direction) {    //0 -left, 1 - up, 2 - right, 3 - down
+        let but = {};
+
+        but.sprite = new Sprite(resources.left_button.texture);
+        but.sprite.interactive = true;
+        but.sprite.buttonMode = true;
+        but.sprite.anchor.set(0.5);
+        but.sprite.scale.set(0.15);
+        but.sprite.rotation = 3.14159216 / 2 * direction;
+        but.sprite.position.set(but.sprite.width + but.sprite.width *2/ 3 * (direction % 2 == 1 ? 1 : (direction > 0 ? 2 : 0)),
+            window.innerHeight - but.sprite.height * 3 / 2 + but.sprite.height * 2 / 3 * (direction % 2 == 0 ? 0 : (direction == 1 ? -1 : 1)));
+        but.sprite
+            .on('pointerdown', onButtonDown)
+            .on('pointerup', onButtonUp)
+            .on('pointerupoutside', onButtonUp);
+
+        gameScene.addChild(but.sprite);
+        // but.code = direction;
+        // but.isDown = false;
+        // but.isUp = true;
+        // but.press = undefined;
+        // but.release = undefined;
+
+        function onButtonDown() {
+            this.isdown = true;
+            this.alpha = 0.5;
+            hero.vx = 5 * (direction % 2 == 0 ? 1 : 0) * (direction == 0 ? -1 : 1);
+            hero.vy = 5 * (direction % 2 == 1 ? 1 : 0) * (direction == 3 ? 1 : -1);
+        }
+
+        function onButtonUp() {
+            this.isdown = false;
+            if (this.isOver) {
+                this.alpha = 0.5;
+            }
+            else {
+                hero.vx = 0;
+                hero.vy = 0;
+                this.alpha = 1;
+            }
+        }
+
+        return but;
     }
 
     function contain(sprite, container) {
