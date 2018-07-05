@@ -14,31 +14,35 @@
     if (!PIXI.utils.isWebGLSupported()) {
         type = "canvas"
     }
-    PIXI.utils.sayHello(type)
 
     let Application = PIXI.Application,
         loader = PIXI.loader,
         resources = PIXI.loader.resources,
-        Sprite = PIXI.Sprite;
+        Sprite = PIXI.Sprite,
+        Text = PIXI.Text,
+        TextStyle = PIXI.TextStyle,
+        Graphics = PIXI.Graphics,
+        Container = PIXI.Container;
 
-    let app = new PIXI.Application({
+    let app = new Application({
         width: 512,
         height: 512,
         antialias: true,    // default: false
         transparent: false, // default: false
-        resolution: 1
-    })
+        resolution: 1,
+        backgroundColor: 0x586D92
+    });
+
     // var scale = scaleToWindow(renderer.view, "white");
     // pointer.x /= scale;
     // pointer.y /= scale;
     // window.addEventListener("resize", function (event) {
     //     scaleToWindow(anyelementElement);
     // })
-    // app.renderer.backgroundColor = 0x1e6f1d00;
     app.renderer.view.style.position = "absolute";
     app.renderer.view.style.display = "block";
-    app.renderer.autoResize = true;
-    app.renderer.resize(window.innerWidth, 720/*window.innerHeight*/);
+    // app.renderer.autoResize = true;
+    app.renderer.resize(window.innerWidth, window.innerHeight);
     document.body.appendChild(app.view);
 
     var newStyle = document.createElement("style");
@@ -46,38 +50,40 @@
     newStyle.appendChild(document.createTextNode(style));
     document.head.appendChild(newStyle);
 
-
-    PIXI.loader
+    loader
+        .add("left_button", "resources/leftButton.png")
         .add("hero_img", "resources/hero.png")
-        .add("background", "resources/BG.png")
-        .on(loadProgressHandler)
         .load(setup);
 
-    function loadProgressHandler(loader, resource) {
-        //Display the file `url` currently being loaded
-        ////console.log("loading: " + resource.url);
+    let gameScene, gameOverScene, hero, state, message,
+        enemies = [], healthBar;
 
-        //Display the percentage of files currently loaded
-        console.log("progress: " + loader.progress + "%");
-
-        //If you gave your files names as the first argument
-        //of the `add` method, you can access them like this
-        //console.log("loading: " + resource.name);
-    }
-
-
-    let hero, state;
-
-    // var enemy = {};
 
     function setup() {
         console.log("All files loaded");
 
-        let background = new Sprite(PIXI.loader.resources.background.texture);
-        app.stage.addChild(background);
+        // let background = new Sprite(PIXI.loader.resources.background.texture);
+        // app.stage.addChild(background);
 
-        hero = new Sprite(PIXI.loader.resources.hero_img.texture);
-        hero.position.set(app.stage.width - hero.width, hero.height / 2);
+        gameScene = new Container();
+        app.stage.addChild(gameScene);
+//Buttons
+        let leftButton = new Sprite(resources.left_button.texture);
+        leftButton.interactive = true;
+        leftButton.buttonMode = true;
+        leftButton.anchor.set(0.5);
+        leftButton.scale.set(0.08);
+        leftButton.position.set(leftButton.width / 2, window.innerHeight - leftButton.height / 2);
+        leftButton
+            .on('pointerdown', onButtonDown)
+            .on('pointerup', onButtonUp)
+            .on('pointerupoutside', onButtonUp);
+            // .on('pointerover', onButtonOver)
+            // .on('pointerout', onButtonOut);
+        gameScene.addChild(leftButton);
+// Sprites
+        hero = new Sprite(resources.hero_img.texture);
+        hero.position.set(window.innerWidth / 2, window.innerHeight / 2);
         hero.interactive = true;
         hero.buttonMode = true;
         hero.anchor.set(0.5);
@@ -94,22 +100,71 @@
         hero.vx = 0;
         hero.vy = 0;
         hero.scale.set(0.1);
-        // hero.scale.x = 0.1;
-        // hero.scale.y = 0.1;
-        hero.rotation = 3.14159216/2;
-        app.stage.addChild(hero);
+        // hero.rotation = 3.14159216 / 4;
+        gameScene.addChild(hero);
 
-        var enemy = {};
+        let numberOfEnemies = 5,
+            spacing = hero.height + 10,
+            xOffset = 150,
+            speed = 2,
+            direction = 1;
 
-        for (let i = 0; i < 10; i++) {
-            enemy[i] = new Sprite(PIXI.loader.resources.hero_img.texture);
-            enemy[i].position.set(randomInt(10, app.stage.width - 300), randomInt(20, app.stage.height - 500));
-            enemy[i].scale.x = randomInt(2, 8) / 100;
-            enemy[i].scale.y = enemy[i].scale.x;
-            app.stage.addChild(enemy[i]);
+        enemies = [];
+
+        for (let i = 0; i < numberOfEnemies; i++) {
+            let enemy = new Sprite(resources.hero_img.texture);
+            enemy.anchor.set(0.5);
+            enemy.scale.set(0.06);
+            enemy.rotation = 3.14159216 / 4 * i;
+            let x = randomInt(0, app.stage.height - enemy.height);
+            let y = spacing * i + xOffset;
+
+            enemy.x = x;
+            enemy.y = y;
+            enemy.vx = speed * direction;
+            direction *= -1;
+
+            enemies.push(enemy);
+
+            gameScene.addChild(enemy);
         }
 
+//Health bar
+        healthBar = new Container();
+        healthBar.position.set(app.stage.width - 170, 4);
+        gameScene.addChild(healthBar);
 
+        //Create the black background rectangle
+        let innerBar = new Graphics();
+        innerBar.beginFill(0x000000);
+        innerBar.drawRect(0, 0, 128, 8);
+        innerBar.endFill();
+        healthBar.addChild(innerBar);
+
+        //Create the front red rectangle
+        let outerBar = new Graphics();
+        outerBar.beginFill(0xFF3300);
+        outerBar.drawRect(0, 0, 128, 8);
+        outerBar.endFill();
+        healthBar.addChild(outerBar);
+        healthBar.outer = outerBar;
+
+
+        gameOverScene = new Container();
+        app.stage.addChild(gameOverScene);
+        gameOverScene.visible = false;
+
+        let style = new TextStyle({
+            fontFamily: "Futura",
+            fontSize: 64,
+            fill: "white"
+        });
+        message = new Text("The End!", style);
+        message.x = app.stage.width / 2;
+        message.y = app.stage.height / 2 - 32;
+        gameOverScene.addChild(message);
+
+//Keys
         let left = keyboard(37),
             up = keyboard(38),
             right = keyboard(39),
@@ -119,7 +174,6 @@
             hero.vx = -5;
             hero.vy = 0;
         };
-
         left.release = () => {
             if (!right.isDown && hero.vy === 0) {
                 hero.vx = 0;
@@ -159,33 +213,65 @@
             }
         };
 
-
         state = play;
-        //Start the game loop
+//Start the game loop
         app.ticker.add(delta => gameLoop(delta));
     }
 
     function gameLoop(delta) {
-
-        // for (let i = 0; i < 2; i++) {
-        //     let enemy = (new Sprite(PIXI.loader.resources.hero_img.texture));
-        //     enemy.position.set(randomInt(10, app.stage.width), randomInt(20, app.stage.height));
-        //     enemy.scale.x = randomInt(1, 10) / 100;
-        //     enemy.scale.y = enemy.scale.x;
-        //     app.stage.addChild(enemy);
-        // }
-
         state(delta);
-
     }
 
     function play(delta) {
+
         hero.y += hero.vy;
         hero.x += hero.vx;
+        contain(hero, {
+            x: hero.width / 2,
+            y: hero.height / 2,
+            width: window.innerWidth + hero.width / 2,
+            height: window.innerHeight + hero.height / 2
+        });
+
+        let heroHit = false;
+
+        enemies.forEach(function (enemy) {
+            enemy.x += enemy.vx;
+
+            let blobHitsWall = contain(enemy, {
+                x: enemy.width / 2,
+                y: enemy.height / 2,
+                width: window.innerWidth + enemy.width / 2,
+                height: window.innerHeight + enemy.height / 2
+            });
+
+            if (blobHitsWall === "right" || blobHitsWall === "left") {
+                enemy.vx *= -1;
+            }
+
+            if (hitTestRectangle(hero, enemy)) {
+                heroHit = true;
+            }
+        });
+        if (heroHit) {
+            hero.alpha = 0.5;
+            //Reduce the width of the health bar's inner rectangle by 1 pixel
+            healthBar.outer.width -= 1;
+
+        } else {
+            hero.alpha = 1;
+        }
+
+        if (healthBar.outer.width <= 0) {
+            message.text = "You lost!";
+            state = end;
+        }
+
     }
 
     function end() {
-        //All the code that should run at the end of the game
+        gameScene.visible = false;
+        gameOverScene.visible = true;
     }
 
     function onDragStart(event) {
@@ -193,7 +279,7 @@
         // the reason for this is because of multitouch
         // we want to track the movement of this particular touch
         this.data = event.data;
-        this.alpha = 0.5;
+        // this.alpha = 0.5;
         this.dragging = true;
     }
 
@@ -210,6 +296,42 @@
             this.x = newPosition.x;
             this.y = newPosition.y;
         }
+    }
+
+    function onButtonDown() {
+        this.isdown = true;
+        this.alpha = 0.5;
+        hero.vx = -5;
+        hero.vy = 0;
+    }
+
+    function onButtonUp() {
+        this.isdown = false;
+        if (this.isOver) {
+
+            this.alpha = 0.5;
+        }
+        else {
+            hero.vx = 0;
+            hero.vy = 0;
+            this.alpha = 1;
+        }
+    }
+
+    function onButtonOver() {
+        this.isOver = true;
+        if (this.isdown) {
+            return;
+        }
+        this.alpha = 1;
+    }
+
+    function onButtonOut() {
+        this.isOver = false;
+        if (this.isdown) {
+            return;
+        }
+        this.alpha = 1;
     }
 
     function keyboard(keyCode) {
@@ -247,6 +369,89 @@
             "keyup", key.upHandler.bind(key), false
         );
         return key;
+    }
+
+    function contain(sprite, container) {
+
+        let collision = undefined;
+
+        //Left
+        if (sprite.x < container.x) {
+            sprite.x = container.x;
+            collision = "left";
+        }
+
+        //Top
+        if (sprite.y < container.y) {
+            sprite.y = container.y;
+            collision = "top";
+        }
+
+        //Right
+        if (sprite.x + sprite.width > container.width) {
+            sprite.x = container.width - sprite.width;
+            collision = "right";
+        }
+
+        //Bottom
+        if (sprite.y + sprite.height > container.height) {
+            sprite.y = container.height - sprite.height;
+            collision = "bottom";
+        }
+
+        //Return the `collision` value
+        return collision;
+    }
+
+    function hitTestRectangle(r1, r2) {
+
+        //Define the variables we'll need to calculate
+        let hit, combinedHalfWidths, combinedHalfHeights, vx, vy;
+
+        //hit will determine whether there's a collision
+        hit = false;
+
+        //Find the center points of each sprite
+        r1.centerX = r1.x + r1.width / 2;
+        r1.centerY = r1.y + r1.height / 2;
+        r2.centerX = r2.x + r2.width / 2;
+        r2.centerY = r2.y + r2.height / 2;
+
+        //Find the half-widths and half-heights of each sprite
+        r1.halfWidth = r1.width / 2;
+        r1.halfHeight = r1.height / 2;
+        r2.halfWidth = r2.width / 2;
+        r2.halfHeight = r2.height / 2;
+
+        //Calculate the distance vector between the sprites
+        vx = r1.centerX - r2.centerX;
+        vy = r1.centerY - r2.centerY;
+
+        //Figure out the combined half-widths and half-heights
+        combinedHalfWidths = r1.halfWidth + r2.halfWidth;
+        combinedHalfHeights = r1.halfHeight + r2.halfHeight;
+
+        //Check for a collision on the x axis
+        if (Math.abs(vx) < combinedHalfWidths) {
+
+            //A collision might be occuring. Check for a collision on the y axis
+            if (Math.abs(vy) < combinedHalfHeights) {
+
+                //There's definitely a collision happening
+                hit = true;
+            } else {
+
+                //There's no collision on the y axis
+                hit = false;
+            }
+        } else {
+
+            //There's no collision on the x axis
+            hit = false;
+        }
+
+        //`hit` will be either `true` or `false`
+        return hit;
     }
 
     function randomInt(min, max) {
