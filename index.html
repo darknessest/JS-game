@@ -53,10 +53,12 @@
     loader
         .add("left_button", "resources/leftButton.png")
         .add("hero_img", "resources/hero.png")
+        .add("fireButton", "resources/fireButton.png")
+        .add("bullet_img", "resources/circle.png")
         .load(setup);
 
     let gameScene, gameOverScene, hero, state, message,
-        enemies = [], healthBar;
+        enemies = [], bullets = [], healthBar;
 
 
     function setup() {
@@ -72,6 +74,7 @@
         let upButton = button(1);
         let rightButton = button(2);
         let downButton = button(3);
+        let fireButton = fire_button();
         //     new Sprite(resources.left_button.texture);
         // leftButton.interactive = true;
         // leftButton.buttonMode = true;
@@ -134,6 +137,7 @@
 
             gameScene.addChild(enemy);
         }
+
 
 //Health bar
         healthBar = new Container();
@@ -244,14 +248,14 @@
         enemies.forEach(function (enemy) {
             enemy.x += enemy.vx;
 
-            let blobHitsWall = contain(enemy, {
+            let enemyHitsWall = contain(enemy, {
                 x: enemy.width / 2,
                 y: enemy.height / 2,
                 width: window.innerWidth + enemy.width / 2,
                 height: window.innerHeight + enemy.height / 2
             });
 
-            if (blobHitsWall === "right" || blobHitsWall === "left") {
+            if (enemyHitsWall === "right" || enemyHitsWall === "left") {
                 enemy.vx *= -1;
             }
 
@@ -269,9 +273,34 @@
         }
 
         if (healthBar.outer.width <= 0) {
+            // message.text.
+            // message.position.set(window.innerWidth / 2, window.innerHeight / 2);
             message.text = "You lost!";
+
             state = end;
         }
+        let counter = 0;
+        bullets.forEach(function (bullet) {
+            counter++;
+            bullet.y -= bullet.vy;
+            // bullet.y += bullet.vy;
+            let bulletHitsWall = contain(bullet, {
+                x: 0,
+                y: 0,
+                width: window.innerWidth + bullet.width,
+                height: window.innerHeight + bullet.height
+            });
+
+            if (bulletHitsWall === "right" || bulletHitsWall === "left"
+                || bulletHitsWall === "bottom" || bulletHitsWall === "top") {
+                gameScene.removeChild(bullet);
+                // bullets.splice(counter, 1);  //requires checking!
+            }
+
+            if (hitTestRectangle(hero, bullet)) {
+                heroHit = true;
+            }
+        });
 
     }
 
@@ -367,25 +396,20 @@
         but.sprite.anchor.set(0.5);
         but.sprite.scale.set(0.15);
         but.sprite.rotation = 3.14159216 / 2 * direction;
-        but.sprite.position.set(but.sprite.width + but.sprite.width *2/ 3 * (direction % 2 == 1 ? 1 : (direction > 0 ? 2 : 0)),
-            window.innerHeight - but.sprite.height * 3 / 2 + but.sprite.height * 2 / 3 * (direction % 2 == 0 ? 0 : (direction == 1 ? -1 : 1)));
+        but.sprite.position.set(but.sprite.width + but.sprite.width * 2 / 3 * (direction % 2 === 1 ? 1 : (direction > 0 ? 2 : 0)),
+            window.innerHeight - but.sprite.height * 3 / 2 + but.sprite.height * 2 / 3 * (direction % 2 === 0 ? 0 : (direction === 1 ? -1 : 1)));
         but.sprite
             .on('pointerdown', onButtonDown)
             .on('pointerup', onButtonUp)
             .on('pointerupoutside', onButtonUp);
 
         gameScene.addChild(but.sprite);
-        // but.code = direction;
-        // but.isDown = false;
-        // but.isUp = true;
-        // but.press = undefined;
-        // but.release = undefined;
 
         function onButtonDown() {
             this.isdown = true;
             this.alpha = 0.5;
-            hero.vx = 5 * (direction % 2 == 0 ? 1 : 0) * (direction == 0 ? -1 : 1);
-            hero.vy = 5 * (direction % 2 == 1 ? 1 : 0) * (direction == 3 ? 1 : -1);
+            hero.vx = 5 * (direction % 2 === 0 ? 1 : 0) * (direction === 0 ? -1 : 1);
+            hero.vy = 5 * (direction % 2 === 1 ? 1 : 0) * (direction === 3 ? 1 : -1);
         }
 
         function onButtonUp() {
@@ -397,6 +421,52 @@
                 hero.vx = 0;
                 hero.vy = 0;
                 this.alpha = 1;
+            }
+        }
+
+        return but;
+    }
+
+    function fire_button() {
+        let but = {};
+
+        but.sprite = new Sprite(resources.fireButton.texture);
+        but.sprite.interactive = true;
+        but.sprite.buttonMode = true;
+        but.sprite.anchor.set(0.5);
+        but.sprite.scale.set(0.17);
+        but.sprite.position.set(window.innerWidth - but.sprite.width, window.innerHeight - but.sprite.height);
+        but.sprite
+            .on('pointerdown', onButtonDown)
+            .on('pointerup', onButtonUp)
+            .on('pointerupoutside', onButtonUp);
+
+        gameScene.addChild(but.sprite);
+
+        function onButtonDown() {
+            this.isdown = true;
+            this.alpha = 0.5;
+            let bullet = new Sprite(resources.bullet_img.texture);
+
+            bullet.anchor.set(0.5);
+            bullet.scale.set(0.04);
+            bullet.vx = 7.5;
+            bullet.vy = 7.5;
+            bullet.position.set(hero.x, hero.y);
+
+            bullets.push(bullet);
+            gameScene.addChild(bullet);
+        }
+
+        function onButtonUp() {
+            this.isdown = false;
+            if (this.isOver) {
+                this.alpha = 0.5;
+            }
+            else {
+
+                this.alpha = 1;
+
             }
         }
 
