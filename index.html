@@ -51,14 +51,16 @@
     document.head.appendChild(newStyle);
 
     loader
-        .add("left_button", "resources/leftButton.png")
         .add("hero_img", "resources/hero.png")
+        .add("enemy1_img", "resources/enemy1.png")
+        .add("enemy2_img", "resources/enemy2.png")
+        .add("left_button", "resources/leftButton.png")
         .add("fireButton", "resources/fireButton.png")
         .add("bullet_img", "resources/circle.png")
         .load(setup);
 
     let gameScene, gameOverScene, hero, state, message,
-        enemies = [], bullets = [], healthBar;
+        enemies = [], bullets = [], healthBar, lastHitButton;
 
 
     function setup() {
@@ -108,7 +110,7 @@
 
         hero.vx = 0;
         hero.vy = 0;
-        hero.scale.set(0.1);
+        hero.scale.set(0.05);
         // hero.rotation = 3.14159216 / 4;
         gameScene.addChild(hero);
 
@@ -121,9 +123,9 @@
         enemies = [];
 
         for (let i = 0; i < numberOfEnemies; i++) {
-            let enemy = new Sprite(resources.hero_img.texture);
+            let enemy = new Sprite(resources.enemy1_img.texture);
             enemy.anchor.set(0.5);
-            enemy.scale.set(0.06);
+            enemy.scale.set(0.04);
             enemy.rotation = 3.14159216 / 4 * i;
             let x = randomInt(0, app.stage.height - enemy.height);
             let y = spacing * i + xOffset;
@@ -259,7 +261,7 @@
                 enemy.vx *= -1;
             }
 
-            if (hitTestRectangle(hero, enemy)) {
+            if (collisionTest(hero, enemy)) {
                 heroHit = true;
             }
         });
@@ -280,10 +282,11 @@
             state = end;
         }
         let counter = 0;
-        bullets.forEach(function (bullet) {
+        bullets.forEach(function (bullet, bullet_index) {
             counter++;
-            bullet.y -= bullet.vy;
-            // bullet.y += bullet.vy;
+
+            bullet.x += bullet.vx;
+            bullet.y += bullet.vy;
             let bulletHitsWall = contain(bullet, {
                 x: 0,
                 y: 0,
@@ -294,12 +297,17 @@
             if (bulletHitsWall === "right" || bulletHitsWall === "left"
                 || bulletHitsWall === "bottom" || bulletHitsWall === "top") {
                 gameScene.removeChild(bullet);
-                // bullets.splice(counter, 1);  //requires checking!
+                bullets.splice(bullet_index, 1);
             }
+            enemies.forEach(function (enemy, enemy_index) {
+                if (collisionTest(enemy, bullet)) {
+                    gameScene.removeChild(bullet);
+                    gameScene.removeChild(enemy);
+                    bullets.splice(bullet_index, 1);
+                    enemies.splice(enemy_index, 1);
+                }
+            });
 
-            if (hitTestRectangle(hero, bullet)) {
-                heroHit = true;
-            }
         });
 
     }
@@ -410,6 +418,7 @@
             this.alpha = 0.5;
             hero.vx = 5 * (direction % 2 === 0 ? 1 : 0) * (direction === 0 ? -1 : 1);
             hero.vy = 5 * (direction % 2 === 1 ? 1 : 0) * (direction === 3 ? 1 : -1);
+            lastHitButton = direction;
         }
 
         function onButtonUp() {
@@ -450,8 +459,12 @@
 
             bullet.anchor.set(0.5);
             bullet.scale.set(0.04);
-            bullet.vx = 7.5;
-            bullet.vy = 7.5;
+            bullet.vx = 0;
+            bullet.vy = 0;
+            if (lastHitButton % 2 === 0)
+                bullet.vx = 7.5 * (lastHitButton === 0 ? -1 : 1);
+            else
+                bullet.vy = 7.5 * (lastHitButton === 3 ? 1 : -1);
             bullet.position.set(hero.x, hero.y);
 
             bullets.push(bullet);
@@ -505,7 +518,7 @@
         return collision;
     }
 
-    function hitTestRectangle(r1, r2) {
+    function collisionTest(r1, r2) {
 
         //Define the variables we'll need to calculate
         let hit, combinedHalfWidths, combinedHalfHeights, vx, vy;
@@ -514,16 +527,16 @@
         hit = false;
 
         //Find the center points of each sprite
-        r1.centerX = r1.x + r1.width / 2;
-        r1.centerY = r1.y + r1.height / 2;
-        r2.centerX = r2.x + r2.width / 2;
-        r2.centerY = r2.y + r2.height / 2;
+        r1.centerX = r1.x + r1.width / 4;
+        r1.centerY = r1.y + r1.height / 4;
+        r2.centerX = r2.x + r2.width / 4;
+        r2.centerY = r2.y + r2.height / 4;
 
         //Find the half-widths and half-heights of each sprite
-        r1.halfWidth = r1.width / 2;
-        r1.halfHeight = r1.height / 2;
-        r2.halfWidth = r2.width / 2;
-        r2.halfHeight = r2.height / 2;
+        r1.halfWidth = r1.width / 4;
+        r1.halfHeight = r1.height / 4;
+        r2.halfWidth = r2.width / 4;
+        r2.halfHeight = r2.height / 4;
 
         //Calculate the distance vector between the sprites
         vx = r1.centerX - r2.centerX;
@@ -559,6 +572,7 @@
     function randomInt(min, max) {
         return Math.floor(Math.random() * (max - min + 1)) + min;
     }
+
 </script>
 </body>
 </html>
