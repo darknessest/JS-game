@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <title>First Game</title>
     <script src="pixi/pixi.min.js"></script>
-    <!--<style>* {padding: 0; margin: 0}</style>-->
+    <!--<script src="pixi/bump.js" type="text/javascript"></script>-->
 </head>
 <body>
 
@@ -22,6 +22,7 @@
         Text = PIXI.Text,
         TextStyle = PIXI.TextStyle,
         Graphics = PIXI.Graphics,
+
         Container = PIXI.Container;
 
     let app = new Application({
@@ -57,48 +58,28 @@
         .add("left_button", "resources/leftButton.png")
         .add("fireButton", "resources/fireButton.png")
         .add("bullet_img", "resources/circle.png")
+        .add("background", "resources/background.jpg")
         .load(setup);
 
     let gameScene, gameOverScene, hero, state, message,
-        enemies = [], bullets = [], healthBar, lastHitButton;
+        enemies = [], bullets = [], healthBar, score, counter = 0, lastHitButton;
 
 
     function setup() {
         console.log("All files loaded");
 
-        // let background = new Sprite(PIXI.loader.resources.background.texture);
-        // app.stage.addChild(background);
 
         gameScene = new Container();
         app.stage.addChild(gameScene);
-//Buttons
-        let leftButton = button(0);
-        let upButton = button(1);
-        let rightButton = button(2);
-        let downButton = button(3);
-        let fireButton = fire_button();
-        //     new Sprite(resources.left_button.texture);
-        // leftButton.interactive = true;
-        // leftButton.buttonMode = true;
-        // leftButton.anchor.set(0.5);
-        // leftButton.scale.set(0.08);
-        // leftButton.position.set(leftButton.width , window.innerHeight - leftButton.height);
-        // leftButton
-        //     .on('pointerdown', onButtonDown)
-        //     .on('pointerup', onButtonUp)
-        //     .on('pointerupoutside', onButtonUp);
-        //     // .on('pointerover', onButtonOver)
-        //     // .on('pointerout', onButtonOut);
-        // gameScene.addChild(leftButton);
 
-
+        let background = new Sprite(PIXI.loader.resources.background.texture);
+        gameScene.addChild(background);
 // Sprites
         hero = new Sprite(resources.hero_img.texture);
         hero.position.set(window.innerWidth / 2, window.innerHeight / 2);
         hero.interactive = true;
         hero.buttonMode = true;
         hero.anchor.set(0.5);
-        // hero
         //     .on('mousedown', onDragStart)
         //     .on('mouseup', onDragEnd)
         //     .on('mouseupoutside', onDragEnd)
@@ -111,7 +92,6 @@
         hero.vx = 0;
         hero.vy = 0;
         hero.scale.set(0.05);
-        // hero.rotation = 3.14159216 / 4;
         gameScene.addChild(hero);
 
         let numberOfEnemies = 5,
@@ -119,8 +99,6 @@
             xOffset = 150,
             speed = 2,
             direction = 1;
-
-        enemies = [];
 
         for (let i = 0; i < numberOfEnemies; i++) {
             let enemy = new Sprite(resources.enemy1_img.texture);
@@ -139,7 +117,6 @@
 
             gameScene.addChild(enemy);
         }
-
 
 //Health bar
         healthBar = new Container();
@@ -160,8 +137,15 @@
         outerBar.endFill();
         healthBar.addChild(outerBar);
         healthBar.outer = outerBar;
+//Score
+        score = new Text(" ", {fill: "white"});
+        score.data = 0;
+        score.anchor.set(0.5);
+        score.position.set(15, 15);
+        gameScene.addChild(score);
+        score.renderable = 1;
 
-
+//Game Over
         gameOverScene = new Container();
         app.stage.addChild(gameOverScene);
         gameOverScene.visible = false;
@@ -172,9 +156,16 @@
             fill: "white"
         });
         message = new Text("The End!", style);
-        message.x = app.stage.width / 2;
-        message.y = app.stage.height / 2 - 32;
+        message.anchor.set(0.5);
+        message.position.set(window.innerWidth / 2, window.innerHeight / 2);
         gameOverScene.addChild(message);
+
+//Buttons
+        let leftButton = button(0);
+        let upButton = button(1);
+        let rightButton = button(2);
+        let downButton = button(3);
+        let fireButton = fire_button();
 
 //Keys
         let left = keyboard(37),
@@ -275,15 +266,11 @@
         }
 
         if (healthBar.outer.width <= 0) {
-            // message.text.
-            // message.position.set(window.innerWidth / 2, window.innerHeight / 2);
             message.text = "You lost!";
 
             state = end;
         }
-        let counter = 0;
         bullets.forEach(function (bullet, bullet_index) {
-            counter++;
 
             bullet.x += bullet.vx;
             bullet.y += bullet.vy;
@@ -305,6 +292,7 @@
                     gameScene.removeChild(enemy);
                     bullets.splice(bullet_index, 1);
                     enemies.splice(enemy_index, 1);
+                    score.text = ++score.data;
                 }
             });
 
@@ -416,6 +404,7 @@
         function onButtonDown() {
             this.isdown = true;
             this.alpha = 0.5;
+            hero.scale.x *= (direction % 2 === 0 ? -1 : 1);
             hero.vx = 5 * (direction % 2 === 0 ? 1 : 0) * (direction === 0 ? -1 : 1);
             hero.vy = 5 * (direction % 2 === 1 ? 1 : 0) * (direction === 3 ? 1 : -1);
             lastHitButton = direction;
