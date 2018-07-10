@@ -22,27 +22,19 @@
         Text = PIXI.Text,
         TextStyle = PIXI.TextStyle,
         Graphics = PIXI.Graphics,
-
         Container = PIXI.Container;
 
     let app = new Application({
-        width: 512,
-        height: 512,
         antialias: true,    // default: false
         transparent: false, // default: false
         resolution: 1,
         backgroundColor: 0x586D92
     });
 
-    // var scale = scaleToWindow(renderer.view, "white");
-    // pointer.x /= scale;
-    // pointer.y /= scale;
-    // window.addEventListener("resize", function (event) {
-    //     scaleToWindow(anyelementElement);
-    // })
+
     app.renderer.view.style.position = "absolute";
     app.renderer.view.style.display = "block";
-    // app.renderer.autoResize = true;
+    app.renderer.autoResize = true;
     app.renderer.resize(window.innerWidth, window.innerHeight);
     document.body.appendChild(app.view);
 
@@ -62,21 +54,27 @@
         .load(setup);
 
     let gameScene, gameOverScene, hero, state, message,
-        enemies = [], bullets = [], healthBar, score, counter = 0, lastHitButton;
-
+        enemies = [], bullets = [], healthBar, score, lastHitButton,
+        // customFieldHeight = Math.ceil(window.innerWidth / (4 / 3));
+        customFieldHeight = window.innerWidth;
+    ``
 
     function setup() {
         console.log("All files loaded");
-
 
         gameScene = new Container();
         app.stage.addChild(gameScene);
 
         let background = new Sprite(PIXI.loader.resources.background.texture);
+        // background.anchor.set(0.5);
+        background.pivot.set(3780 / 2, 1170);
+        background.scale.set(customFieldHeight / background.height);
+        // background.scale.set(0.32);
+        background.position.set(window.innerWidth / 2, customFieldHeight / 2);
         gameScene.addChild(background);
 // Sprites
         hero = new Sprite(resources.hero_img.texture);
-        hero.position.set(window.innerWidth / 2, window.innerHeight / 2);
+        hero.position.set(window.innerWidth / 2, customFieldHeight / 2);
         hero.interactive = true;
         hero.buttonMode = true;
         hero.anchor.set(0.5);
@@ -91,22 +89,22 @@
 
         hero.vx = 0;
         hero.vy = 0;
-        hero.scale.set(0.05);
+        hero.scale.set(cust_ratio(hero, 7));
         gameScene.addChild(hero);
 
-        let numberOfEnemies = 5,
+        let numberOfEnemies = 10,
             spacing = hero.height + 10,
-            xOffset = 150,
+            yOffset = hero.height / 4,
             speed = 2,
             direction = 1;
 
-        for (let i = 0; i < numberOfEnemies; i++) {
+        for (let i = 1; i <= numberOfEnemies; i++) {
             let enemy = new Sprite(resources.enemy1_img.texture);
             enemy.anchor.set(0.5);
-            enemy.scale.set(0.04);
-            enemy.rotation = 3.14159216 / 4 * i;
-            let x = randomInt(0, app.stage.height - enemy.height);
-            let y = spacing * i + xOffset;
+            enemy.scale.set(cust_ratio(enemy, 8));
+            // enemy.rotation = 3.14159216 / 4 * i;
+            let x = randomInt(30, window.innerWidth);
+            let y = spacing * i + yOffset;
 
             enemy.x = x;
             enemy.y = y;
@@ -145,6 +143,14 @@
         gameScene.addChild(score);
         score.renderable = 1;
 
+        let info = innerHeight + " x " + innerWidth + " : " + customFieldHeight;
+        let screen = new Text(info, {fill: "white", fontSize: 12});
+        screen.data = 0;
+        screen.anchor.set(0.5);
+        screen.position.set(250, 15);
+        gameScene.addChild(screen);
+        screen.renderable = 1;
+
 //Game Over
         gameOverScene = new Container();
         app.stage.addChild(gameOverScene);
@@ -157,7 +163,7 @@
         });
         message = new Text("The End!", style);
         message.anchor.set(0.5);
-        message.position.set(window.innerWidth / 2, window.innerHeight / 2);
+        message.position.set(window.innerWidth / 2, customFieldHeight / 2);
         gameOverScene.addChild(message);
 
 //Buttons
@@ -232,8 +238,8 @@
         contain(hero, {
             x: hero.width / 2,
             y: hero.height / 2,
-            width: window.innerWidth + hero.width / 2,
-            height: window.innerHeight + hero.height / 2
+            width: window.innerWidth + hero.width / 1.75,
+            height: customFieldHeight
         });
 
         let heroHit = false;
@@ -242,14 +248,15 @@
             enemy.x += enemy.vx;
 
             let enemyHitsWall = contain(enemy, {
-                x: enemy.width / 2,
+                x: enemy.width / 3,
                 y: enemy.height / 2,
-                width: window.innerWidth + enemy.width / 2,
-                height: window.innerHeight + enemy.height / 2
+                width: window.innerWidth + enemy.width / 1.75,
+                height: customFieldHeight
             });
 
             if (enemyHitsWall === "right" || enemyHitsWall === "left") {
                 enemy.vx *= -1;
+                enemy.scale.x *= -1;
             }
 
             if (collisionTest(hero, enemy)) {
@@ -278,7 +285,7 @@
                 x: 0,
                 y: 0,
                 width: window.innerWidth + bullet.width,
-                height: window.innerHeight + bullet.height
+                height: customFieldHeight
             });
 
             if (bulletHitsWall === "right" || bulletHitsWall === "left"
@@ -390,10 +397,10 @@
         but.sprite.interactive = true;
         but.sprite.buttonMode = true;
         but.sprite.anchor.set(0.5);
-        but.sprite.scale.set(0.15);
+        but.sprite.scale.set(cust_ratio(but.sprite, 5));
         but.sprite.rotation = 3.14159216 / 2 * direction;
         but.sprite.position.set(but.sprite.width + but.sprite.width * 2 / 3 * (direction % 2 === 1 ? 1 : (direction > 0 ? 2 : 0)),
-            window.innerHeight - but.sprite.height * 3 / 2 + but.sprite.height * 2 / 3 * (direction % 2 === 0 ? 0 : (direction === 1 ? -1 : 1)));
+            window.innerHeight - but.sprite.height * 3 / 2 + but.sprite.height * 2 / 3 * (direction % 2 === 0 ? 0 : (direction === 1 ? -1 : 1)) + 15);
         but.sprite
             .on('pointerdown', onButtonDown)
             .on('pointerup', onButtonUp)
@@ -404,7 +411,8 @@
         function onButtonDown() {
             this.isdown = true;
             this.alpha = 0.5;
-            hero.scale.x *= (direction % 2 === 0 ? -1 : 1);
+            if (lastHitButton != direction)
+                hero.scale.x *= (direction % 2 === 0 ? -1 : 1);
             hero.vx = 5 * (direction % 2 === 0 ? 1 : 0) * (direction === 0 ? -1 : 1);
             hero.vy = 5 * (direction % 2 === 1 ? 1 : 0) * (direction === 3 ? 1 : -1);
             lastHitButton = direction;
@@ -426,24 +434,24 @@
     }
 
     function fire_button() {
-        let but = {};
 
-        but.sprite = new Sprite(resources.fireButton.texture);
-        but.sprite.interactive = true;
-        but.sprite.buttonMode = true;
-        but.sprite.anchor.set(0.5);
-        but.sprite.scale.set(0.17);
-        but.sprite.position.set(window.innerWidth - but.sprite.width, window.innerHeight - but.sprite.height);
-        but.sprite
+        let but = new Sprite(resources.fireButton.texture);
+        but.interactive = true;
+        but.buttonMode = true;
+        but.anchor.set(0.5);
+        but.scale.set(cust_ratio(but, 3.5));
+        but.position.set(window.innerWidth - but.width, window.innerHeight - (window.innerHeight - customFieldHeight) / 2);
+        but
             .on('pointerdown', onButtonDown)
             .on('pointerup', onButtonUp)
             .on('pointerupoutside', onButtonUp);
 
-        gameScene.addChild(but.sprite);
+        gameScene.addChild(but);
 
         function onButtonDown() {
             this.isdown = true;
             this.alpha = 0.5;
+            hero
             let bullet = new Sprite(resources.bullet_img.texture);
 
             bullet.anchor.set(0.5);
@@ -466,9 +474,7 @@
                 this.alpha = 0.5;
             }
             else {
-
                 this.alpha = 1;
-
             }
         }
 
@@ -561,6 +567,12 @@
     function randomInt(min, max) {
         return Math.floor(Math.random() * (max - min + 1)) + min;
     }
+
+    function cust_ratio(sprite, rat) {
+        return customFieldHeight / (rat) / (sprite.height);
+        // return window.innerWidth / rat / sprite.width;
+    }
+
 
 </script>
 </body>
