@@ -500,9 +500,9 @@
             bullet.vx = 0;
             bullet.vy = 0;
             if (lastHitButton % 2 === 0)
-                bullet.vx = 7.5 * (lastHitButton === 0 ? -1 : 1);
+                bullet.vx = 7.5 * (customFieldHeight / 600 > 1 ? 1.5 * customFieldHeight / 600 : 1) * (lastHitButton === 0 ? -1 : 1);
             else
-                bullet.vy = 7.5 * (lastHitButton === 3 ? 1 : -1);
+                bullet.vy = 7.5 * (customFieldHeight / 600 > 1 ? 1.5 * customFieldHeight / 600 : 1) * (lastHitButton === 3 ? 1 : -1);
             bullet.position.set(hero.x, hero.y);
 
             bullets.push(bullet);
