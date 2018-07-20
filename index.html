@@ -57,10 +57,9 @@
         .load(setup);
 
     let gameScene, gameOverScene, hero, hero_hit, state, message,
-        enemies = [], bullets = [], healthBar, score, lastHitButton,
-        hitAnimation_img = ["hit1_img", "hit2_img", "hit3_img"],
+        enemies = [], bullets = [], healthBar, score, lastHitButton = 2,
+        hitAnimation_img = ["hero_img", "hit1_img", "hit2_img", "hit3_img"],
         hitAnimation = [],
-        // customFieldHeight = Math.ceil(window.innerWidth / (4 / 3));
         customFieldHeight = window.innerWidth;
 
 
@@ -79,11 +78,18 @@
         gameScene.addChild(background);
 
 // Sprites
+        for (let i = 0; i < 4; i++) {
+            let texture = PIXI.Texture.fromImage(hitAnimation_img[i]);
+            hitAnimation.push(texture);
+        }
+
+
         hero = new Sprite(resources.hero_img.texture);
         hero.position.set(window.innerWidth / 2, customFieldHeight / 2);
         hero.interactive = true;
         hero.buttonMode = true;
         hero.anchor.set(0.5);
+
         //     .on('mousedown', onDragStart)
         //     .on('mouseup', onDragEnd)
         //     .on('mouseupoutside', onDragEnd)
@@ -99,39 +105,35 @@
         hero.scale.set(cust_ratio(hero, 7));
         gameScene.addChild(hero);
         //Hero animation
-        for (let i = 0; i < 3; i++) {
-            let texture = PIXI.Texture.fromImage(hitAnimation_img[i]);
-            hitAnimation.push(texture);
-        }
         hero_hit = new PIXI.extras.AnimatedSprite(hitAnimation);
         hero_hit.anchor.set(0.5);
         hero_hit.scale.set(cust_ratio(hero_hit, 7));
-        hero_hit.scale.x *= -1;
         hero_hit.interactive = true;
         hero_hit.visible = false;
         // hero_hit.loop = false;
 
-        hero_hit.animationSpeed = 0.30;
+        hero_hit.animationSpeed = 0.40;
         gameScene.addChild(hero_hit);
 
-        //Enemies
-        let numberOfEnemies = 10,
+//Enemies
+        let numberOfEnemies = 15,
             spacing = hero.height + 10,
             yOffset = hero.height / 4,
             speed = 2,
             direction = 1;
-        //Generating enemies
+        //Generating and setting up enemies
         for (let i = 1; i <= numberOfEnemies; i++) {
             let enemy = new Sprite(resources.enemy1_img.texture);
             enemy.anchor.set(0.5);
             enemy.scale.set(cust_ratio(enemy, 8));
             // enemy.rotation = 3.14159216 / 4 * i;
-            let x = randomInt(30, window.innerWidth);
-            let y = spacing * i + yOffset;
+            let x = (enemy.width * i > window.innerWidth ? enemy.width * i - window.innerWidth : enemy.width * i);
+            let y = (spacing * i + yOffset > customFieldHeight ? spacing * i + yOffset - customFieldHeight : spacing * i + yOffset);
 
             enemy.x = x;
             enemy.y = y;
-            enemy.vx = speed * direction;
+            enemy.vx = speed * (customFieldHeight / 600 > 1 ? 1.5 * customFieldHeight / 600 : 1) * direction * (randomInt(1, 100) % 2 === 0 ? 0 : 1);
+            enemy.vy = speed * (customFieldHeight / 600 > 1 ? 1.5 * customFieldHeight / 600 : 1) * direction;
             direction *= -1;
 
             enemies.push(enemy);
@@ -203,7 +205,7 @@
             down = keyboard(40);
 
         left.press = () => {
-            hero.vx = -5;
+            hero.vx = -5 * (customFieldHeight / 600 > 1 ? 1.5 * customFieldHeight / 600 : 1);
             hero.vy = 0;
         };
         left.release = () => {
@@ -214,7 +216,7 @@
 
         //Up
         up.press = () => {
-            hero.vy = -5;
+            hero.vy = -5 * (customFieldHeight / 600 > 1 ? 1.5 * customFieldHeight / 600 : 1);
             hero.vx = 0;
         };
         up.release = () => {
@@ -225,7 +227,7 @@
 
         //Right
         right.press = () => {
-            hero.vx = 5;
+            hero.vx = 5 * (customFieldHeight / 600 > 1 ? 1.5 * customFieldHeight / 600 : 1);
             hero.vy = 0;
         };
         right.release = () => {
@@ -236,7 +238,7 @@
 
         //Down
         down.press = () => {
-            hero.vy = 5;
+            hero.vy = 5 * (customFieldHeight / 600 > 1 ? 1.5 * customFieldHeight / 600 : 1);
             hero.vx = 0;
         };
         down.release = () => {
@@ -255,9 +257,10 @@
     }
 
     function play(delta) {
-
+        //moving hero
         hero.y += hero.vy;
         hero.x += hero.vx;
+
         contain(hero, {
             x: hero.width / 2,
             y: hero.height / 2,
@@ -267,8 +270,10 @@
 
         let heroHit = false;
 
+        //Enemies movements handling
         enemies.forEach(function (enemy) {
             enemy.x += enemy.vx;
+            enemy.y += enemy.vy;
 
             let enemyHitsWall = contain(enemy, {
                 x: enemy.width / 3,
@@ -281,11 +286,15 @@
                 enemy.vx *= -1;
                 enemy.scale.x *= -1;
             }
+            if (enemyHitsWall === "top" || enemyHitsWall === "bottom") {
+                enemy.vy = (enemy.vy < 0 ? randomInt(5, -enemy.vy * 10) / 10 : randomInt(-enemy.vy * 10, 5) / 10);
+            }
 
             if (collisionTest(hero, enemy)) {
                 heroHit = true;
             }
         });
+        //Health bar
         if (heroHit) {
             hero.alpha = 0.5;
             //Reduce the width of the health bar's inner rectangle by 1 pixel
@@ -306,6 +315,8 @@
 
             state = end;
         }
+
+        //Bullets handling
         bullets.forEach(function (bullet, bullet_index) {
 
             bullet.x += bullet.vx;
@@ -442,8 +453,8 @@
             this.alpha = 0.5;
 
             rotating_hero(hero, direction);
-            hero.vx = 5 * (direction % 2 === 0 ? 1 : 0) * (direction === 0 ? -1 : 1);
-            hero.vy = 5 * (direction % 2 === 1 ? 1 : 0) * (direction === 3 ? 1 : -1);
+            hero.vx = 5 * (customFieldHeight / 600 > 1 ? 1.5 * customFieldHeight / 600 : 1) * (direction % 2 === 0 ? 1 : 0) * (direction === 0 ? -1 : 1);
+            hero.vy = 5 * (customFieldHeight / 600 > 1 ? 1.5 * customFieldHeight / 600 : 1) * (direction % 2 === 1 ? 1 : 0) * (direction === 3 ? 1 : -1);
             lastHitButton = direction;
         }
 
@@ -497,12 +508,13 @@
             bullets.push(bullet);
             gameScene.addChild(bullet);
             hero_hit.position.set(hero.x, hero.y);
-            hero_hit.scale.x = hero.scale.x * (-1);
+            hero_hit.scale.x = hero.scale.x;
             hero_hit.rotation = hero.rotation;
             hero.visible = false;
             hero_hit.visible = true;
 
             hero_hit.play();
+
 
         }
 
@@ -510,9 +522,11 @@
             this.isdown = false;
             if (this.isOver) {
                 this.alpha = 0.5;
+
             }
             else {
                 this.alpha = 1;
+                hero_hit.stop();
                 hero_hit.visible = 0;
                 hero.visible = 1;
 
