@@ -282,7 +282,7 @@
         let heroHit = false;
 
         //Enemies movements handling
-        if (score.data < 15) {
+        if (score.data < 11) {
             enemies.forEach(function (enemy) {
                 // if (hero.x !== enemy.x && hero.x - enemy.x > 5)
                 //     enemy.x += 3;
@@ -345,7 +345,7 @@
             state = end;
         }
         //Winning
-        if (score.data > 15 && enemies.length === 0) {
+        if (score.data > 10 && enemies.length === 0) {
             message.text = "You won!";
 
             state = end;
