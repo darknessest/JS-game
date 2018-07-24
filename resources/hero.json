@@ -1,0 +1,84 @@
+{
+  "frames": {
+    "hit0.png": {
+      "frame": {
+        "x": 0,
+        "y": 420,
+        "w": 210,
+        "h": 171
+      },
+      "spriteSourceSize": {
+        "x": 21,
+        "y": 44,
+        "w": 255,
+        "h": 255
+      },
+      "sourceSize": {
+        "w": 255,
+        "h": 255
+      }
+    },
+    "hit1.png": {
+      "frame": {
+        "x": 219,
+        "y": 208,
+        "w": 210,
+        "h": 241
+      },
+      "spriteSourceSize": {
+        "x": 23,
+        "y": 3,
+        "w": 255,
+        "h": 255
+      },
+      "sourceSize": {
+        "w": 255,
+        "h": 255
+      }
+    },
+    "hit2.png": {
+      "frame": {
+        "x": 0,
+        "y": 0,
+        "w": 234,
+        "h": 207
+      },
+      "spriteSourceSize": {
+        "x": 12,
+        "y": 24,
+        "w": 255,
+        "h": 255
+      },
+      "sourceSize": {
+        "w": 255,
+        "h": 255
+      }
+    },
+    "hit3.png": {
+      "frame": {
+        "x": 0,
+        "y": 208,
+        "w": 218,
+        "h": 211
+      },
+      "spriteSourceSize": {
+        "x": 19,
+        "y": 22,
+        "w": 255,
+        "h": 255
+      },
+      "sourceSize": {
+        "w": 255,
+        "h": 255
+      }
+    }
+  },
+  "meta": {
+    "image": "hero.png",
+    "size": {
+      "w": 430,
+      "h": 592
+    },
+    "scale": "1"
+  }
+}

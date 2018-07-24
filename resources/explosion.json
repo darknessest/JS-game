@@ -1,0 +1,354 @@
+{
+  "frames": {
+    "explosionframes_01.png": {
+      "frame": {
+        "x": 351,
+        "y": 109,
+        "w": 110,
+        "h": 108
+      },
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 110,
+        "h": 108
+      },
+      "sourceSize": {
+        "w": 110,
+        "h": 108
+      }
+    },
+    "explosionframes_02.png": {
+      "frame": {
+        "x": 239,
+        "y": 0,
+        "w": 110,
+        "h": 108
+      },
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 110,
+        "h": 108
+      },
+      "sourceSize": {
+        "w": 110,
+        "h": 108
+      }
+    },
+    "explosionframes_03.png": {
+      "frame": {
+        "x": 239,
+        "y": 229,
+        "w": 111,
+        "h": 110
+      },
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 111,
+        "h": 110
+      },
+      "sourceSize": {
+        "w": 111,
+        "h": 110
+      }
+    },
+    "explosionframes_04.png": {
+      "frame": {
+        "x": 237,
+        "y": 116,
+        "w": 113,
+        "h": 112
+      },
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 113,
+        "h": 112
+      },
+      "sourceSize": {
+        "w": 113,
+        "h": 112
+      }
+    },
+    "explosionframes_05.png": {
+      "frame": {
+        "x": 121,
+        "y": 116,
+        "w": 115,
+        "h": 115
+      },
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 115,
+        "h": 115
+      },
+      "sourceSize": {
+        "w": 115,
+        "h": 115
+      }
+    },
+    "explosionframes_06.png": {
+      "frame": {
+        "x": 0,
+        "y": 362,
+        "w": 118,
+        "h": 117
+      },
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 118,
+        "h": 117
+      },
+      "sourceSize": {
+        "w": 118,
+        "h": 117
+      }
+    },
+    "explosionframes_07.png": {
+      "frame": {
+        "x": 120,
+        "y": 242,
+        "w": 118,
+        "h": 118
+      },
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 118,
+        "h": 118
+      },
+      "sourceSize": {
+        "w": 118,
+        "h": 118
+      }
+    },
+    "explosionframes_08.png": {
+      "frame": {
+        "x": 0,
+        "y": 0,
+        "w": 120,
+        "h": 120
+      },
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 120,
+        "h": 120
+      },
+      "sourceSize": {
+        "w": 120,
+        "h": 120
+      }
+    },
+    "explosionframes_09.png": {
+      "frame": {
+        "x": 0,
+        "y": 121,
+        "w": 120,
+        "h": 120
+      },
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 120,
+        "h": 120
+      },
+      "sourceSize": {
+        "w": 120,
+        "h": 120
+      }
+    },
+    "explosionframes_10.png": {
+      "frame": {
+        "x": 0,
+        "y": 242,
+        "w": 119,
+        "h": 119
+      },
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 119,
+        "h": 119
+      },
+      "sourceSize": {
+        "w": 119,
+        "h": 119
+      }
+    },
+    "explosionframes_11.png": {
+      "frame": {
+        "x": 119,
+        "y": 362,
+        "w": 118,
+        "h": 118
+      },
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 118,
+        "h": 118
+      },
+      "sourceSize": {
+        "w": 118,
+        "h": 118
+      }
+    },
+    "explosionframes_12.png": {
+      "frame": {
+        "x": 121,
+        "y": 0,
+        "w": 117,
+        "h": 115
+      },
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 117,
+        "h": 115
+      },
+      "sourceSize": {
+        "w": 117,
+        "h": 115
+      }
+    },
+    "explosionframes_13.png": {
+      "frame": {
+        "x": 238,
+        "y": 361,
+        "w": 113,
+        "h": 112
+      },
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 113,
+        "h": 112
+      },
+      "sourceSize": {
+        "w": 113,
+        "h": 112
+      }
+    },
+    "explosionframes_14.png": {
+      "frame": {
+        "x": 350,
+        "y": 0,
+        "w": 110,
+        "h": 108
+      },
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 110,
+        "h": 108
+      },
+      "sourceSize": {
+        "w": 110,
+        "h": 108
+      }
+    },
+    "explosionframes_15.png": {
+      "frame": {
+        "x": 351,
+        "y": 218,
+        "w": 107,
+        "h": 104
+      },
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 107,
+        "h": 104
+      },
+      "sourceSize": {
+        "w": 107,
+        "h": 104
+      }
+    },
+    "explosionframes_16.png": {
+      "frame": {
+        "x": 352,
+        "y": 323,
+        "w": 102,
+        "h": 100
+      },
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 102,
+        "h": 100
+      },
+      "sourceSize": {
+        "w": 102,
+        "h": 100
+      }
+    },
+    "explosionframes_17.png": {
+      "frame": {
+        "x": 352,
+        "y": 424,
+        "w": 96,
+        "h": 96
+      },
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 96,
+        "h": 96
+      },
+      "sourceSize": {
+        "w": 96,
+        "h": 96
+      }
+    },
+    "explosionframes_18.png": {
+      "frame": {
+        "x": 449,
+        "y": 424,
+        "w": 92,
+        "h": 92
+      },
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 92,
+        "h": 92
+      },
+      "sourceSize": {
+        "w": 92,
+        "h": 92
+      }
+    },
+    "explosionframes_19.png": {
+      "frame": {
+        "x": 455,
+        "y": 323,
+        "w": 86,
+        "h": 88
+      },
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 86,
+        "h": 88
+      },
+      "sourceSize": {
+        "w": 86,
+        "h": 88
+      }
+    }
+  },
+  "meta": {
+    "image": "explosion.png",
+    "size": {
+      "w": 542,
+      "h": 521
+    },
+    "scale": "1"
+  }
+}

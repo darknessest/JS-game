@@ -33,12 +33,17 @@
         backgroundColor: 0x586D92
     });
 
-
     app.renderer.view.style.position = "absolute";
     app.renderer.view.style.display = "block";
     app.renderer.autoResize = true;
     app.renderer.resize(window.innerWidth, window.innerHeight);
     document.body.appendChild(app.view);
+
+    // layer.useRenderTexture = true;
+    // layer.useDoubleBuffer = true;
+    // app.stage.addChild(layer);
+    // var showLayer = new PIXI.Sprite(layer.getRenderTexture());
+    // app.stage.addChild(showLayer);
 
     var newStyle = document.createElement("style");
     var style = "* {padding: 0; margin: 0}";
@@ -46,22 +51,15 @@
     document.head.appendChild(newStyle);
     //images pre-loading
     loader
-        .add("hero_img", "resources/hero.png")
-        .add("enemy1_img", "resources/enemy1.png")
-        .add("enemy2_img", "resources/enemy2.png")
-        .add("left_button", "resources/leftButton.png")
-        .add("fireButton", "resources/fireButton.png")
-        .add("bullet_img", "resources/circle.png")
+        .add("resources/hero.json")
+        .add("resources/base.json")
+        .add("resources/smoke.json")
+        .add("resources/explosion.json")
         .add("background", "resources/background.jpg")
-        .add("hit1_img", "resources/hit1.png")
-        .add("hit2_img", "resources/hit2.png")
-        .add("hit3_img", "resources/hit3.png")
         .load(setup);
 
-    let gameScene, gameOverScene, hero, hero_hit, state, message,
+    let gameScene, gameOverScene, hero, spawn, smoke, UIheart, UIheartMin, state, message,
         enemies = [], bullets = [], healthBar, score, lastHitButton = 2,
-        hitAnimation_img = ["hero_img", "hit1_img", "hit2_img", "hit3_img"],
-        hitAnimation = [],
         customFieldHeight = window.innerWidth;
     let timer = 1;
 
@@ -71,7 +69,8 @@
         gameScene = new Container();
         app.stage.addChild(gameScene);
 
-        let background = new Sprite(PIXI.loader.resources.background.texture);
+
+        let background = new Sprite(resources.background.texture);
         // background.anchor.set(0.5);
         background.pivot.set(3780 / 2, 1170);
         background.scale.set(customFieldHeight / background.height);
@@ -80,22 +79,20 @@
         gameScene.addChild(background);
 
 // Sprites
-        for (let i = 0; i < 4; i++) {
-            let texture = PIXI.Texture.fromImage(hitAnimation_img[i]);
-            hitAnimation.push(texture);
-        }
+        var frames_hero = [];
+        for (let val = 0; val < 4; val++)
+            frames_hero.push(PIXI.Texture.fromFrame('hit' + val + '.png'));
 
-
-        hero = new PIXI.extras.AnimatedSprite(hitAnimation);
+        hero = new PIXI.extras.AnimatedSprite(frames_hero);
 
         hero.position.set(window.innerWidth / 2, customFieldHeight / 2);
         hero.interactive = true;
         hero.buttonMode = true;
         hero.anchor.set(0.5);
         hero.animationSpeed = 0.4;
-        hero.onComplete = function () {
-            hero.gotoAndStop(0);
-        };
+        // hero.onComplete = function () {
+        //     hero.gotoAndStop(0);
+        // };
         hero.visible = true;
         //     .on('mousedown', onDragStart)
         //     .on('mouseup', onDragEnd)
@@ -111,28 +108,49 @@
         hero.currentDirection = 2;
         hero.scale.set(cust_ratio(hero, 7));
         gameScene.addChild(hero);
-        // //Hero animation
-        // // var anim_hit = new PIXI.spine.Spine();
-        // hero_hit = new PIXI.extras.AnimatedSprite(hitAnimation);
-        // hero_hit.anchor.set(0.5);
-        // hero_hit.scale.set(cust_ratio(hero_hit, 7));
-        // hero_hit.interactive = true;
-        // hero_hit.visible = false;
-        //
-        // // hero_hit.loop = false;
-        //
-        // hero_hit.animationSpeed = 0.40;
-        // gameScene.addChild(hero_hit);
+        // spawn anim
+        var frames_spawn = [];
+        for (let i = 1; i < 20; i++) {
+            var val = i < 10 ? '0' + i : i;
+            frames_spawn.push(PIXI.Texture.fromFrame('explosionframes_' + val + '.png'));
+        }
+
+        spawn = new PIXI.extras.AnimatedSprite(frames_spawn);
+        spawn.interactive = true;
+        spawn.anchor.set(0.5);
+        spawn.scale.set(cust_ratio(spawn, 15));
+        spawn.animationSpeed = 1.5;
+        spawn.loop = false;
+        spawn.onComplete = function () {
+            spawn.visible = false;
+            spawn.gotoAndStop(0);
+        };
+        //death anim
+        var frames_smoke = []
+        for (let i = 1; i < 11; i++) {
+            val = i < 10 ? '0' + i : i;
+            frames_smoke.push(PIXI.Texture.fromFrame('smoke_' + val + '.png'));
+        }
+        smoke = new PIXI.extras.AnimatedSprite(frames_smoke);
+        smoke.interactive = true;
+        smoke.anchor.set(0.5);
+        smoke.scale.set(cust_ratio(smoke, 10));
+        smoke.animationSpeed = 0.8;
+        smoke.loop = false;
+        smoke.onComplete = function () {
+            smoke.visible = false;
+            smoke.gotoAndStop(0);
+        };
 
 //Enemies
-        let numberOfEnemies = 10,
+        let numberOfEnemies = 1,
             spacing = hero.height + 10,
             yOffset = hero.height / 4,
             speed = 2,
             direction = 1;
         //Generating and setting up enemies
         for (let i = 1; i <= numberOfEnemies; i++) {
-            let enemy = new Sprite(resources.enemy1_img.texture);
+            let enemy = new Sprite(resources["resources/base.json"].textures["enemy1.png"]);
             enemy.anchor.set(0.5);
             enemy.scale.set(cust_ratio(enemy, 8));
             // enemy.rotation = 3.14159216 / 4 * i;
@@ -151,9 +169,23 @@
         }
 
 //Health bar
+        UIheart = new Sprite(resources["resources/base.json"].textures["hearts.png"]);
+        UIheart.anchor.set(0.5);
+        UIheart.scale.set(cust_ratio(UIheart, 20));
+        UIheart.position.set(80, 15);
+        gameScene.addChild(UIheart);
+
         healthBar = new Container();
-        healthBar.position.set(50, 10);
+        healthBar.position.set(100, 10);
         gameScene.addChild(healthBar);
+
+        UIheartMin = new Sprite(resources["resources/base.json"].textures["heart-minus.png"]);
+        UIheartMin.anchor.set(0.5);
+        UIheartMin.scale.set(cust_ratio(UIheartMin, 20));
+        UIheartMin.position.set(80, 15);
+        UIheartMin.visible = false;
+        gameScene.addChild(UIheartMin);
+
 
         //Create the black background rectangle
         let innerBar = new Graphics();
@@ -171,7 +203,7 @@
         healthBar.outer = outerBar;
 //Score
         score = new Text(" ", {fill: "white"});
-        score.data = 0;
+        score.data = 9;
         score.anchor.set(0.5);
         score.position.set(15, 15);
         gameScene.addChild(score);
@@ -282,23 +314,8 @@
         let heroHit = false;
 
         //Enemies movements handling
-        if (score.data < 11) {
+        if (score.data < 10) {
             enemies.forEach(function (enemy) {
-                // if (hero.x !== enemy.x && hero.x - enemy.x > 5)
-                //     enemy.x += 3;
-                // else if (hero.x !== enemy.x && hero.x < enemy.x)
-                //     enemy.x -= 3;
-                // else if (hero.x === enemy.x)
-                //     enemy.x += 0;
-                //
-                // if (hero.y !== enemy.y && hero.y - enemy.y > 5)
-                //     enemy.y += 3;
-                // else if (hero.y !== enemy.y && hero.y < enemy.y)
-                //     enemy.y -= 3;
-                // else if (hero.y === enemy.y)
-                //     enemy.y += 0;
-
-
                 enemy.x += enemy.vx;
                 enemy.y += enemy.vy;
 
@@ -321,22 +338,72 @@
                     heroHit = true;
                 }
             });
+            timer = Math.ceil((app.ticker.lastTime - app.ticker.elapsedMS) / 1000);
         }
-        else { //Next Level Enemies
+        //Next Level Enemies
+        else {
             if (timer === Math.ceil((app.ticker.lastTime - app.ticker.elapsedMS) / 1000)) {
-                if (enemies.length < 20)
+                // console.log("we got here");
+                if (enemies.length < 20) {
+                    // console.log("and now there");
                     changeEnemies(timer);
+                }
                 timer++;
             }
+
+            enemies.forEach(function (enemy) {
+                let speed = 2 * (customFieldHeight / 600 > 1 ? 1.5 * customFieldHeight / 600 : 1);
+                if (hero.x !== enemy.x && hero.x - enemy.x > 5)
+                    enemy.x += speed;
+                else if (hero.x !== enemy.x && hero.x < enemy.x)
+                    enemy.x -= speed;
+                else if (hero.x === enemy.x)
+                    enemy.x += 0;
+
+                if (hero.y !== enemy.y && hero.y - enemy.y > 5)
+                    enemy.y += speed;
+                else if (hero.y !== enemy.y && hero.y < enemy.y)
+                    enemy.y -= speed;
+                else if (hero.y === enemy.y)
+                    enemy.y += 0;
+
+
+                let enemyHitsWall = contain(enemy, {
+                    x: enemy.width / 3,
+                    y: enemy.height / 2,
+                    width: window.innerWidth + enemy.width / 1.65,
+                    height: customFieldHeight + enemy.height / 4
+                });
+
+                if (enemyHitsWall === "right" || enemyHitsWall === "left") {
+                    enemy.vx *= -1;
+                    enemy.scale.x *= -1;
+                }
+                if (enemyHitsWall === "top" || enemyHitsWall === "bottom") {
+                    enemy.vy = (enemy.vy < 0 ? randomInt(5, -enemy.vy * 10) / 10 : randomInt(-enemy.vy * 10, 5) / 10);
+                }
+
+                if (bump.hitTestRectangle(hero, enemy)/*collisionTest(hero, enemy)*/) {
+                    heroHit = true;
+                }
+            });
             // if(Math.floor((app.ticker.lastTime - app.ticker.elapsedMS) / 1000) )
         }
+
         //Health bar
         if (heroHit) {
             hero.alpha = 0.5;
             //Reduce the width of the health bar's inner rectangle by 1 pixel
-            healthBar.outer.width -= 1;
+            UIheartMin.visible = true;
+            UIheart.visible = false;
+
+            healthBar.outer.width -= 0.01;
+            UIheartMin.alpha -= (UIheartMin.alpha >= 0.05 ? 0.05 : -0.9);
 
         } else {
+            UIheart.visible = true;
+            UIheartMin.visible = false;
+            UIheartMin.alpha = 1;
             hero.alpha = 1;
         }
         //Losing
@@ -345,18 +412,18 @@
             state = end;
         }
         //Winning
-        if (score.data > 10 && enemies.length === 0) {
+        if (score.data >= 15 && enemies.length === 0) {
             message.text = "You won!";
 
             state = end;
         }
-        //Next Level
 
         //Bullets handling
         bullets.forEach(function (bullet, bullet_index) {
 
             bullet.x += bullet.vx;
             bullet.y += bullet.vy;
+            bullet.rotation += 0.01;
             let bulletHitsWall = contain(bullet, {
                 x: 0,
                 y: 0,
@@ -372,8 +439,14 @@
             enemies.forEach(function (enemy, enemy_index) {
                 // if (collisionTest(enemy, bullet)) {
                 if (bump.circleRectangleCollision(bullet, enemy)) {
+                    smoke.position.set(enemy.x, enemy.y);
+                    gameScene.addChild(smoke);
+                    smoke.visible = true;
+
                     gameScene.removeChild(bullet);
+                    smoke.play()
                     gameScene.removeChild(enemy);
+                    ;
                     bullets.splice(bullet_index, 1);
                     enemies.splice(enemy_index, 1);
                     score.text = ++score.data;
@@ -390,12 +463,14 @@
         }
         // spacing = hero.height + 10,
         //     yOffset = hero.height / 4,
-        let enemy = new Sprite(resources.enemy2_img.texture);
+        let enemy = new Sprite(resources.enemy2.texture);
         enemy.anchor.set(0.5);
         enemy.scale.set(cust_ratio(enemy, 8));
         // enemy.rotation = 3.14159216 / 4 * i;
-        let x = (enemy.width * i_time > window.innerWidth ? enemy.width * i_time - window.innerWidth : enemy.width * i_time);
-        let y = ((hero.height + 10) * i_time + (hero.height / 4) > customFieldHeight ? (hero.height + 10) * i_time + (hero.height / 4) - customFieldHeight : (hero.height + 10) * i_time + (hero.height / 4));
+        let x = randomInt(50, window.innerWidth - 50);
+        /*(enemy.width * i_time > window.innerWidth ? enemy.width * i_time - window.innerWidth : enemy.width * i_time);*/
+        let y = randomInt(50, customFieldHeight - 50);
+        /*((hero.height + 10) * i_time + (hero.height / 4) > customFieldHeight ? (hero.height + 10) * i_time + (hero.height / 4) - customFieldHeight : (hero.height + 10) * i_time + (hero.height / 4));*/
 
         enemy.x = x;
         enemy.y = y;
@@ -405,7 +480,12 @@
 
         enemies.push(enemy);
 
+        spawn.position.set(enemy.x, enemy.y);
+        gameScene.addChild(spawn);
+        spawn.visible = true;
+        spawn.play();
         gameScene.addChild(enemy);
+        // spawn.gotoAndStop(0);
 
     }
 
@@ -495,7 +575,7 @@
     function button(direction) {    //0 -left, 1 - up, 2 - right, 3 - down
         let but = {};
 
-        but.sprite = new Sprite(resources.left_button.texture);
+        but.sprite = new Sprite(resources["resources/base.json"].textures["leftButton.png"]);
         but.sprite.interactive = true;
         but.sprite.buttonMode = true;
         but.sprite.anchor.set(0.5);
@@ -538,7 +618,7 @@
 
     function fire_button() {
 
-        let but = new Sprite(resources.fireButton.texture);
+        let but = new Sprite(resources["resources/base.json"].textures["fireButton.png"]);
         but.interactive = true;
         but.buttonMode = true;
         but.anchor.set(0.5);
@@ -555,7 +635,7 @@
             this.isdown = true;
             this.alpha = 0.5;
 
-            let bullet = new Sprite(resources.bullet_img.texture);
+            let bullet = new Sprite(resources.circle.texture);
 
             bullet.anchor.set(0.5);
             bullet.scale.set(cust_ratio(bullet, 9));
@@ -711,7 +791,6 @@
         return customFieldHeight / (rat) / (sprite.height);
         // return window.innerWidth / rat / sprite.width;
     }
-
 
 </script>
 </body>
