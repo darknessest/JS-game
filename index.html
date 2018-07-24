@@ -143,7 +143,7 @@
         };
 
 //Enemies
-        let numberOfEnemies = 1,
+        let numberOfEnemies = 10,
             spacing = hero.height + 10,
             yOffset = hero.height / 4,
             speed = 2,
@@ -203,7 +203,7 @@
         healthBar.outer = outerBar;
 //Score
         score = new Text(" ", {fill: "white"});
-        score.data = 9;
+        score.data = 0;
         score.anchor.set(0.5);
         score.position.set(15, 15);
         gameScene.addChild(score);
@@ -463,7 +463,7 @@
         }
         // spacing = hero.height + 10,
         //     yOffset = hero.height / 4,
-        let enemy = new Sprite(resources.enemy2.texture);
+        let enemy = new Sprite(resources["resources/base.json"].textures["enemy2.png"]);
         enemy.anchor.set(0.5);
         enemy.scale.set(cust_ratio(enemy, 8));
         // enemy.rotation = 3.14159216 / 4 * i;
@@ -635,7 +635,7 @@
             this.isdown = true;
             this.alpha = 0.5;
 
-            let bullet = new Sprite(resources.circle.texture);
+            let bullet = new Sprite(resources["resources/base.json"].textures["circle.png"]);
 
             bullet.anchor.set(0.5);
             bullet.scale.set(cust_ratio(bullet, 9));
