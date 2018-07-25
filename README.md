@@ -2,4 +2,4 @@
 
 Pixi 4.8.1
 
-darknessest.github.io/JS-game
+https://darknessest.github.io/JS-game/

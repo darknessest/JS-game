@@ -4,8 +4,10 @@
     <meta charset="utf-8">
     <title>First Game</title>
     <script src="pixi/pixi.min.js"></script>
+    <script src="pixi/bump.js"></script>
+    <script src="pixi/pixi-particles.js"></script>
     <!--<script src="pixi-spine-master/bin/pixi-spine.js" type="text/javascript"></script>-->
-    <script src="pixi/bump.js" type="text/javascript"></script>
+
 </head>
 <body>
 
@@ -62,6 +64,8 @@
         enemies = [], bullets = [], healthBar, score, lastHitButton = 2,
         customFieldHeight = window.innerWidth;
     let timer = 1;
+    //new stuff
+    var emitter, parts_container, emitterPos;
 
     function setup() {
         console.log("All files loaded");
@@ -69,7 +73,7 @@
         gameScene = new Container();
         app.stage.addChild(gameScene);
 
-
+// Background
         let background = new Sprite(resources.background.texture);
         // background.anchor.set(0.5);
         background.pivot.set(3780 / 2, 1170);
@@ -77,8 +81,8 @@
         // background.scale.set(0.32);
         background.position.set(window.innerWidth / 2, customFieldHeight / 2);
         gameScene.addChild(background);
-
 // Sprites
+
         var frames_hero = [];
         for (let val = 0; val < 4; val++)
             frames_hero.push(PIXI.Texture.fromFrame('hit' + val + '.png'));
@@ -90,9 +94,6 @@
         hero.buttonMode = true;
         hero.anchor.set(0.5);
         hero.animationSpeed = 0.4;
-        // hero.onComplete = function () {
-        //     hero.gotoAndStop(0);
-        // };
         hero.visible = true;
         //     .on('mousedown', onDragStart)
         //     .on('mouseup', onDragEnd)
@@ -171,21 +172,20 @@
 //Health bar
         UIheart = new Sprite(resources["resources/base.json"].textures["hearts.png"]);
         UIheart.anchor.set(0.5);
-        UIheart.scale.set(cust_ratio(UIheart, 20));
-        UIheart.position.set(80, 15);
+        UIheart.scale.set(cust_ratio(UIheart, 25));
+        UIheart.position.set(80, 10 + UIheart.height / 2);
         gameScene.addChild(UIheart);
-
-        healthBar = new Container();
-        healthBar.position.set(100, 10);
-        gameScene.addChild(healthBar);
 
         UIheartMin = new Sprite(resources["resources/base.json"].textures["heart-minus.png"]);
         UIheartMin.anchor.set(0.5);
-        UIheartMin.scale.set(cust_ratio(UIheartMin, 20));
-        UIheartMin.position.set(80, 15);
+        UIheartMin.scale.set(cust_ratio(UIheartMin, 25));
+        UIheartMin.position.set(80, 10 + UIheartMin.height / 2);
         UIheartMin.visible = false;
         gameScene.addChild(UIheartMin);
 
+        healthBar = new Container();
+        healthBar.position.set(100, 5 + UIheart.height / 2);
+        gameScene.addChild(healthBar);
 
         //Create the black background rectangle
         let innerBar = new Graphics();
@@ -213,7 +213,7 @@
         let screen = new Text(info, {fill: "white", fontSize: 12});
         screen.data = 0;
         screen.anchor.set(0.5);
-        screen.position.set(250, 15);
+        screen.position.set(window.innerWidth - screen.width, 15);
         gameScene.addChild(screen);
         screen.renderable = 1;
 
@@ -287,10 +287,84 @@
                 hero.vy = 0;
             }
         };
+//Emitter setup
+        parts_container = new PIXI.particles.ParticleContainer(1000, {
+            scale: true,
+            position: true,
+            rotation: false,
+            uvs: false,
+            tint: true
+        });
 
-        state = play;
+        emitter = new PIXI.particles.Emitter(
+            parts_container,
+
+            // The collection of particle images to use
+            [PIXI.Texture.fromImage('hit0.png')],
+
+            // Emitter configuration, edit this to change the look
+            // of the emitter
+            {
+                autoUpdate: true,
+                alpha: {
+                    start: 0.5,
+                    end: 0.05
+                },
+                scale: {
+                    start: customFieldHeight / 7 / 255,
+                    end: customFieldHeight / 14 / 255,
+                    minimumScaleMultiplier: 1
+                },
+                // color: {
+                //     start: "#e3f9ff",
+                //     end: "#2196F3"
+                // },
+                speed: {
+                    start: 0,
+                    end: 0,
+                    minimumSpeedMultiplier: 1
+                },
+                acceleration: {
+                    x: 0,
+                    y: 0
+                },
+                maxSpeed: 5 * (customFieldHeight / 600 > 1 ? 1.5 * customFieldHeight / 600 : 1),
+                startRotation: {
+                    min: 0,
+                    max: 0
+                },
+                noRotation: true,
+                rotationSpeed: {
+                    min: 0,
+                    max: 0
+                },
+                lifetime: {
+                    min: 0.3,
+                    max: 0.3
+                },
+                blendMode: "normal",
+                frequency: 0.05,
+                emitterLifetime: 0.8,
+                maxParticles: 1000,
+                pos: {
+                    x: 0,
+                    y: 0
+                },
+                addAtBack: false,
+                spawnType: "point"
+            }
+        );
+        // container.position.set(hero.x, hero.y);
+        emitterPos = new PIXI.Point(hero.x, hero.y);
+        gameScene.addChild(parts_container);
+
+
+// Start the update
+
 
 //Start the game loop
+        state = play;
+
         app.ticker.add(delta => gameLoop(delta));
     }
 
@@ -299,7 +373,6 @@
     }
 
     function play(delta) {
-
         //moving hero
         hero.y += hero.vy;
         hero.x += hero.vx;
@@ -455,7 +528,52 @@
 
         });
 
+//Trale Emitter
+
+        if (emitterPos.x !== hero.x || emitterPos.y !== hero.y) {
+            emitterPos.x = hero.x;
+            emitterPos.y = hero.y;
+            // const dt = 1 - Math.pow(1 - sharpness, delta);
+            // const dx = hero.x - emitterPos.x;
+            // const dy = hero.y - emitterPos.y;
+            //
+            // if (Math.abs(dx) > minDelta) {
+            //     emitterPos.x += dx * dt;
+            // } else {
+            //     emitterPos.x = hero.x;
+            // }
+            //
+            // if (Math.abs(dy) > minDelta) {
+            //     emitterPos.y += dy * dt;
+            // } else {
+            //     emitterPos.y = hero.y;
+            // }
+            emitter.updateOwnerPos(emitterPos.x, emitterPos.y);
+            emitter.emit = true;
+        }
+        else {
+            emitter.emit = false;
+        }
+
+
     }
+
+    // var update = function () {
+    //     emitter.emit = true;
+    //     // Update the next frame
+    //     requestAnimationFrame(update);
+    //
+    //     var now = Date.now();
+    //
+    //     // The emitter requires the elapsed
+    //     // number of seconds since the last update
+    //     emitter.update((now - elapsed) * 0.001);
+    //     elapsed = now;
+    //
+    //     // Should re-render the PIXI Stage
+    //     // renderer.render(stage);
+    // };
+
 
     function changeEnemies(i_time) {
         if (typeof changeEnemies.direction === 'undefined') {
