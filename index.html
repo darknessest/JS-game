@@ -51,10 +51,16 @@
         .add("resources/base.json")
         .add("resources/smoke.json")
         .add("resources/explosion.json")
-        .add("background", "resources/background.jpg")
+        // .add("background", "resources/background.jpg")
+        // .add("end_background", "resources/end_background.png")
+        // .add("restart", "resources/end_restart.png")
+        // .add("end_score", "resources/end_score.png")
+        // .add("start_background", "resources/start_background.png")
+        // .add("start", "resources/start_btn.png")
         .load(setup);
 
-    let gameScene, gameOverScene, hero, spawn, smoke, UIheart, UIheartMin, state, message,
+    let gameScene, gameOverScene, isFirstPlay = true, start_button, hero, spawn, smoke, UIheart, UIheartMin, state,
+        message,
         enemies = [], bullets = [], healthBar, score, lastHitButton = 2,
         customFieldHeight = (window.innerWidth < window.innerHeight ? window.innerWidth : window.innerHeight);
     let timer = 1;
@@ -64,15 +70,61 @@
     function setup() {
         console.log("All files loaded");
 
+
+//Pre-game Screen
+        if (isFirstPlay) {
+            //start background
+            let preGameScene = new Container();
+            app.stage.addChild(preGameScene);
+            let first_background = new Sprite(resources["resources/base.json"].textures["start_background.png"]);
+            if (customFieldHeight === window.innerHeight)
+                first_background.anchor.set(0.5);
+            else
+                first_background.pivot.set(1316 / 2, 250);
+            first_background.scale.set(customFieldHeight / first_background.height);
+            first_background.position.set(window.innerWidth / 2, customFieldHeight / 2);
+            preGameScene.addChild(first_background);
+            //start button
+            start_button = new Sprite(resources["resources/base.json"].textures["start_btn.png"]);
+            start_button.anchor.set(0.5);
+            start_button.position.set(window.innerWidth / 2, customFieldHeight / 2 + 200);
+            start_button.interactive = true;
+            start_button.buttonMode = true;
+            preGameScene.addChild(start_button);
+            start_button
+                .on('pointerdown', onStartDown)
+                .on('pointerup', onStartUp);
+
+            function onStartDown() {
+                this.isdown = true;
+                this.alpha = 0.9;
+                gameScene.visible = true;
+                app.stage.removeChild(preGameScene);
+            }
+
+            function onStartUp() {
+                this.isdown = false;
+                if (this.isOver) {
+                    this.alpha = 0.9;
+                }
+                else {
+                    this.alpha = 1;
+                }
+            }
+
+        }
+
+
         gameScene = new Container();
         app.stage.addChild(gameScene);
-
+        if (isFirstPlay)
+            gameScene.visible = false;
 // Background
-        let background = new Sprite(resources.background.texture);
+        let background = new Sprite(resources["resources/base.json"].textures["background.jpg"]);
         if (customFieldHeight === window.innerHeight)
             background.anchor.set(0.5);
         else
-            background.pivot.set(3780 / 2, 1100);
+            background.pivot.set(1920 / 2, 560);
         background.scale.set(customFieldHeight / background.height);
         background.position.set(window.innerWidth / 2, customFieldHeight / 2);
         gameScene.addChild(background);
@@ -104,7 +156,7 @@
         hero.currentDirection = 2;
         hero.scale.set(cust_ratio(hero, 7));
         gameScene.addChild(hero);
-        // spawn anim
+        // spawn animation
         var frames_spawn = [];
         for (let i = 1; i < 20; i++) {
             var val = i < 10 ? '0' + i : i;
@@ -121,7 +173,7 @@
             spawn.visible = false;
             spawn.gotoAndStop(0);
         };
-        //death anim
+        //death animation
         var frames_smoke = []
         for (let i = 1; i < 11; i++) {
             val = i < 10 ? '0' + i : i;
@@ -142,7 +194,7 @@
         let numberOfEnemies = 20,
             spacing = hero.height + 10,
             yOffset = hero.height / 4,
-            speed = 2,
+
             direction = 1;
         //Generating and setting up enemies
         for (let i = 1; i <= numberOfEnemies; i++) {
@@ -155,8 +207,8 @@
 
             enemy.x = x;
             enemy.y = y;
-            enemy.vx = speed * (customFieldHeight / 600 > 1 ? 1.5 * customFieldHeight / 600 : 1) * direction/* * (randomInt(1, 100) % 2 === 0 ? 0 : 1)*/;
-            enemy.vy = speed * (customFieldHeight / 600 > 1 ? 1.5 * customFieldHeight / 600 : 1) * direction;
+            enemy.vx = 2 * (customFieldHeight / 600 > 1 ? 1.5 * customFieldHeight / 600 : 1) * direction/* * (randomInt(1, 100) % 2 === 0 ? 0 : 1)*/;
+            enemy.vy = 2 * (customFieldHeight / 600 > 1 ? 1.5 * customFieldHeight / 600 : 1) * direction;
             direction *= -1;
 
             enemies.push(enemy);
@@ -205,27 +257,89 @@
         score.renderable = 1;
 
         let info = innerHeight + " x " + innerWidth + " : " + customFieldHeight;
-        let screen = new Text(info, {fill: "white", fontSize: 12});
-        screen.data = 0;
-        screen.anchor.set(0.5);
-        screen.position.set(window.innerWidth - screen.width, 15);
-        gameScene.addChild(screen);
-        screen.renderable = 1;
+        let screen_info = new Text(info, {fill: "white", fontSize: 12});
+        screen_info.data = 0;
+        screen_info.anchor.set(0.5);
+        screen_info.position.set(window.innerWidth - screen_info.width, 15);
+        gameScene.addChild(screen_info);
+        screen_info.renderable = 1;
 
 //Game Over
         gameOverScene = new Container();
         app.stage.addChild(gameOverScene);
         gameOverScene.visible = false;
+        //background
+        let end_background = new Sprite(resources["resources/base.json"].textures["end_background.png"]);
+        end_background.anchor.set(0.5);
+        end_background.position.set(window.innerWidth / 2, customFieldHeight / 2);
+        gameOverScene.addChild(end_background);
+        //Reached lvl
+        let reached_lvl = new Sprite(resources["resources/base.json"].textures["end_score.png"]);
+        reached_lvl.anchor.set(0.5);
+        reached_lvl.position.set(window.innerWidth / 2, customFieldHeight / 2);
+        gameOverScene.addChild(reached_lvl);
+        //restart button
+        let restart_button = new Sprite(resources["resources/base.json"].textures["end_restart.png"]);
+        restart_button.anchor.set(0.5);
+        restart_button.position.set(window.innerWidth / 2, customFieldHeight / 2 + 200);
+        restart_button.interactive = true;
+        restart_button.buttonMode = true;
+        restart_button
+            .on('pointerdown', onRestartDown)
+            .on('pointerup', onRestartUp);
 
+        function onRestartDown() {
+            this.isdown = true;
+            this.alpha = 0.9;
+            //cleaning
+            enemies = [];
+            gameScene.removeChild(background);
+            gameScene.removeChild(hero);
+            gameScene.removeChild(UIheart);
+            gameScene.removeChild(UIheartMin);
+            gameScene.removeChild(healthBar);
+            healthBar.removeChild(innerBar);
+            healthBar.removeChild(outerBar);
+            gameScene.removeChild(score);
+            gameScene.removeChild(screen_info);
+            gameScene.removeChild(parts_container);
+            gameScene.removeChild(smoke);
+            gameScene.removeChild(spawn);
+            app.stage.removeChild(gameScene);
+
+            gameOverScene.removeChild(end_background);
+            gameOverScene.removeChild(reached_lvl);
+            gameOverScene.removeChild(restart_button);
+            gameOverScene.removeChild(message);
+            app.stage.removeChild(gameOverScene);
+            isFirstPlay = false;
+            setup();
+        }
+
+        function onRestartUp() {
+            this.isdown = false;
+            if (this.isOver) {
+                this.alpha = 0.9;
+            }
+            else {
+
+                this.alpha = 1;
+            }
+        }
+
+        gameOverScene.addChild(restart_button);
+
+        //TEXT
         let style = new TextStyle({
             fontFamily: "Futura",
             fontSize: 64,
             fill: "white"
         });
-        message = new Text("The End!", style);
+        message = new Text(score.data, style);
         message.anchor.set(0.5);
-        message.position.set(window.innerWidth / 2, customFieldHeight / 2);
+        message.position.set(window.innerWidth / 2 - 212, customFieldHeight / 2 - 70);
         gameOverScene.addChild(message);
+
 
 //Buttons
         let leftButton = button(0);
@@ -350,18 +464,16 @@
                 spawnType: "point"
             }
         );
-        // container.position.set(hero.x, hero.y);
         emitterPos = new PIXI.Point(hero.x, hero.y);
         gameScene.addChild(parts_container);
         // emitter.startScale *= -1;
 
-// Start the update
-
 
 //Start the game loop
         state = play;
+        if (isFirstPlay)
+            app.ticker.add(delta => gameLoop(delta));
 
-        app.ticker.add(delta => gameLoop(delta));
     }
 
     function gameLoop(delta) {
@@ -369,175 +481,177 @@
     }
 
     function play(delta) {
-        //moving hero
-        hero.y += hero.vy;
-        hero.x += hero.vx;
+        if (start_button) {
+            //moving hero
+            hero.y += hero.vy;
+            hero.x += hero.vx;
 
-        contain(hero, {
-            x: hero.width / 2.5,
-            y: hero.height / 3,
-            width: window.innerWidth + hero.width / 1.65,
-            height: customFieldHeight + hero.height / 2
-        });
-
-        let heroHit = false;
-
-        //Enemies movements handling
-        if (score.data < 10) {
-            enemies.forEach(function (enemy) {
-                enemy.x += enemy.vx;
-                enemy.y += enemy.vy;
-
-                let enemyHitsWall = contain(enemy, {
-                    x: enemy.width / 3,
-                    y: enemy.height / 2,
-                    width: window.innerWidth + enemy.width / 1.65,
-                    height: customFieldHeight + enemy.height / 2
-                });
-
-                if (enemyHitsWall === "right" || enemyHitsWall === "left") {
-                    enemy.vx *= -(1 + (randomInt(0, 3) / 100));
-                    enemy.scale.x *= -1;
-                }
-                if (enemyHitsWall === "top" || enemyHitsWall === "bottom") {
-                    // enemy.vy = (enemy.vy < 0 ? randomInt(5, -enemy.vy * 10) / 10 : randomInt(-enemy.vy * 10, 5) / 10);
-                    enemy.vy *= -(1 + (randomInt(0, 3) / 100));
-                }
-
-                if (bump.hitTestRectangle(hero, enemy)/*collisionTest(hero, enemy)*/) {
-                    heroHit = true;
-                }
+            contain(hero, {
+                x: hero.width / 2.5,
+                y: hero.height / 3,
+                width: window.innerWidth + hero.width / 1.65,
+                height: customFieldHeight + hero.height / 2
             });
-            timer = Math.ceil((app.ticker.lastTime - app.ticker.elapsedMS) / 1000);
-        }
-        //Next Level Enemies
-        else {
-            if (timer === Math.ceil((app.ticker.lastTime - app.ticker.elapsedMS) / 1000)) {
-                // console.log("we got here");
-                if (enemies.length < 20) {
-                    // console.log("and now there");
-                    changeEnemies(timer);
+
+            let heroHit = false;
+
+            //Enemies movements handling
+            if (score.data < 15) {
+                enemies.forEach(function (enemy) {
+                    enemy.x += enemy.vx;
+                    enemy.y += enemy.vy;
+
+                    let enemyHitsWall = contain(enemy, {
+                        x: enemy.width / 3,
+                        y: enemy.height / 2,
+                        width: window.innerWidth + enemy.width / 1.65,
+                        height: customFieldHeight + enemy.height / 2
+                    });
+
+                    if (enemyHitsWall === "right" || enemyHitsWall === "left") {
+                        enemy.vx *= -(1 + (randomInt(0, 3) / 100));
+                        // enemy.vx = (enemy.vx < 0 ? randomInt(5, -enemy.vx * 10) / 10 : randomInt(-enemy.vx * 10, 5) / 10);
+                        enemy.scale.x *= -1;
+                    }
+                    if (enemyHitsWall === "top" || enemyHitsWall === "bottom") {
+                        // enemy.vy = (enemy.vy < 0 ? randomInt(5, -enemy.vy * 10) / 10 : randomInt(-enemy.vy * 10, 5) / 10);
+                        enemy.vy *= -(1 + (randomInt(0, 3) / 100));
+                    }
+
+                    if (bump.hitTestRectangle(hero, enemy)/*collisionTest(hero, enemy)*/) {
+                        heroHit = true;
+                    }
+                });
+                timer = Math.ceil((app.ticker.lastTime - app.ticker.elapsedMS) / 1000);
+            }
+            //Next Level Enemies
+            else {
+                if (timer === Math.ceil((app.ticker.lastTime - app.ticker.elapsedMS) / 1000)) {
+                    // console.log("we got here");
+                    if (enemies.length < 20) {
+                        // console.log("and now there");
+                        changeEnemies(timer);
+                    }
+                    timer++;
                 }
-                timer++;
+
+                enemies.forEach(function (enemy) {
+                    let speed = 2 * (customFieldHeight / 600 > 1 ? 1.5 * customFieldHeight / 600 : 1);
+                    if (hero.x !== enemy.x && hero.x - enemy.x > 5)
+                        enemy.x += speed;
+                    else if (hero.x !== enemy.x && hero.x < enemy.x)
+                        enemy.x -= speed;
+                    else if (hero.x === enemy.x)
+                        enemy.x += 0;
+
+                    if (hero.y !== enemy.y && hero.y - enemy.y > 5)
+                        enemy.y += speed;
+                    else if (hero.y !== enemy.y && hero.y < enemy.y)
+                        enemy.y -= speed;
+                    else if (hero.y === enemy.y)
+                        enemy.y += 0;
+
+
+                    let enemyHitsWall = contain(enemy, {
+                        x: enemy.width / 3,
+                        y: enemy.height / 2,
+                        width: window.innerWidth + enemy.width / 1.65,
+                        height: customFieldHeight /*+ enemy.height / 4*/
+                    });
+
+                    if (enemyHitsWall === "right" || enemyHitsWall === "left") {
+                        enemy.vx *= -(1 + (randomInt(0, 3) / 100));
+                        enemy.scale.x *= -1;
+                    }
+                    if (enemyHitsWall === "top" || enemyHitsWall === "bottom") {
+                        enemy.vy *= -(1 + (randomInt(0, 3) / 100));
+                    }
+
+                    if (bump.hitTestRectangle(hero, enemy)) {
+                        heroHit = true;
+                    }
+                });
+                // if(Math.floor((app.ticker.lastTime - app.ticker.elapsedMS) / 1000) )
             }
 
-            enemies.forEach(function (enemy) {
-                let speed = 2 * (customFieldHeight / 600 > 1 ? 1.5 * customFieldHeight / 600 : 1);
-                if (hero.x !== enemy.x && hero.x - enemy.x > 5)
-                    enemy.x += speed;
-                else if (hero.x !== enemy.x && hero.x < enemy.x)
-                    enemy.x -= speed;
-                else if (hero.x === enemy.x)
-                    enemy.x += 0;
+            //Health bar
+            if (heroHit) {
+                hero.alpha = 0.5;
+                //Reduce the width of the health bar's inner rectangle by 1 pixel
+                UIheartMin.visible = true;
+                UIheart.visible = false;
 
-                if (hero.y !== enemy.y && hero.y - enemy.y > 5)
-                    enemy.y += speed;
-                else if (hero.y !== enemy.y && hero.y < enemy.y)
-                    enemy.y -= speed;
-                else if (hero.y === enemy.y)
-                    enemy.y += 0;
+                healthBar.outer.width -= 1;
+                UIheartMin.alpha -= (UIheartMin.alpha >= 0.05 ? 0.05 : -0.9);
 
+            } else {
+                UIheart.visible = true;
+                UIheartMin.visible = false;
+                UIheartMin.alpha = 1;
+                hero.alpha = 1;
+            }
+            //Losing
+            if (healthBar.outer.width <= 0) {
+                message.text = score.data;
+                state = end;
+            }
+            //Winning
+            if (score.data >= 55 && enemies.length === 0) {
+                message.text = "You won!";
 
-                let enemyHitsWall = contain(enemy, {
-                    x: enemy.width / 3,
-                    y: enemy.height / 2,
-                    width: window.innerWidth + enemy.width / 1.65,
-                    height: customFieldHeight /*+ enemy.height / 4*/
+                state = end;
+            }
+
+            //Bullets handling
+            bullets.forEach(function (bullet, bullet_index) {
+
+                bullet.x += bullet.vx;
+                bullet.y += bullet.vy;
+                bullet.rotation += 0.01;
+                let bulletHitsWall = contain(bullet, {
+                    x: 0,
+                    y: 0,
+                    width: window.innerWidth + bullet.width,
+                    height: customFieldHeight + bullet.height
                 });
 
-                if (enemyHitsWall === "right" || enemyHitsWall === "left") {
-                    enemy.vx *= -(1 + (randomInt(0, 3) / 100));
-                    enemy.scale.x *= -1;
-                }
-                if (enemyHitsWall === "top" || enemyHitsWall === "bottom") {
-                    enemy.vy *= -(1 + (randomInt(0, 3) / 100));
-                }
-
-                if (bump.hitTestRectangle(hero, enemy)) {
-                    heroHit = true;
-                }
-            });
-            // if(Math.floor((app.ticker.lastTime - app.ticker.elapsedMS) / 1000) )
-        }
-
-        //Health bar
-        if (heroHit) {
-            hero.alpha = 0.5;
-            //Reduce the width of the health bar's inner rectangle by 1 pixel
-            UIheartMin.visible = true;
-            UIheart.visible = false;
-
-            healthBar.outer.width -= 1;
-            UIheartMin.alpha -= (UIheartMin.alpha >= 0.05 ? 0.05 : -0.9);
-
-        } else {
-            UIheart.visible = true;
-            UIheartMin.visible = false;
-            UIheartMin.alpha = 1;
-            hero.alpha = 1;
-        }
-        //Losing
-        if (healthBar.outer.width <= 0) {
-            message.text = "You lost!";
-            state = end;
-        }
-        //Winning
-        if (score.data >= 55 && enemies.length === 0) {
-            message.text = "You won!";
-
-            state = end;
-        }
-
-        //Bullets handling
-        bullets.forEach(function (bullet, bullet_index) {
-
-            bullet.x += bullet.vx;
-            bullet.y += bullet.vy;
-            bullet.rotation += 0.01;
-            let bulletHitsWall = contain(bullet, {
-                x: 0,
-                y: 0,
-                width: window.innerWidth + bullet.width,
-                height: customFieldHeight + bullet.height
-            });
-
-            if (bulletHitsWall === "right" || bulletHitsWall === "left"
-                || bulletHitsWall === "bottom" || bulletHitsWall === "top") {
-                gameScene.removeChild(bullet);
-                bullets.splice(bullet_index, 1);
-            }
-            enemies.forEach(function (enemy, enemy_index) {
-                // if (collisionTest(enemy, bullet)) {
-                if (bump.circleRectangleCollision(bullet, enemy)) {
-                    smoke.position.set(enemy.x, enemy.y);
-                    gameScene.addChild(smoke);
-                    smoke.visible = true;
-
+                if (bulletHitsWall === "right" || bulletHitsWall === "left"
+                    || bulletHitsWall === "bottom" || bulletHitsWall === "top") {
                     gameScene.removeChild(bullet);
-                    smoke.play()
-                    gameScene.removeChild(enemy);
                     bullets.splice(bullet_index, 1);
-                    enemies.splice(enemy_index, 1);
-                    score.text = ++score.data;
                 }
-            });
+                enemies.forEach(function (enemy, enemy_index) {
+                    // if (collisionTest(enemy, bullet)) {
+                    if (bump.circleRectangleCollision(bullet, enemy)) {
+                        smoke.position.set(enemy.x, enemy.y);
+                        gameScene.addChild(smoke);
+                        smoke.visible = true;
 
-        });
+                        gameScene.removeChild(bullet);
+                        smoke.play()
+                        gameScene.removeChild(enemy);
+                        bullets.splice(bullet_index, 1);
+                        enemies.splice(enemy_index, 1);
+                        score.text = ++score.data;
+                    }
+                });
+
+            });
 
 //Trail Emitter
 
-        if (emitterPos.x !== hero.x || emitterPos.y !== hero.y) {
-            emitterPos.x = hero.x;
-            emitterPos.y = hero.y;
-            emitter.rotate(270);
-            emitter.updateOwnerPos(emitterPos.x, emitterPos.y);
-            emitter.emit = true;
-        }
-        else {
-            emitter.emit = false;
-        }
+            if (emitterPos.x !== hero.x || emitterPos.y !== hero.y) {
+                emitterPos.x = hero.x;
+                emitterPos.y = hero.y;
+                emitter.rotate(270);
+                emitter.updateOwnerPos(emitterPos.x, emitterPos.y);
+                emitter.emit = true;
+            }
+            else {
+                emitter.emit = false;
+            }
 
-
+        }
     }
 
     function changeEnemies() {
