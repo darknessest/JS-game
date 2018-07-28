@@ -53,17 +53,15 @@
         .add("resources/explosion.json")
         .add("background", "resources/background.jpg")
         .add("end_background", "resources/end_background.png")
-        // .add("restart", "resources/end_restart.png")
-        // .add("end_score", "resources/end_score.png")
+        .add("start_logo", "resources/start_logo.png")
         .add("start_background", "resources/start_background.png")
-        // .add("start", "resources/start_btn.png")
         .load(setup);
 
-    let gameScene, gameOverScene, isFirstPlay = true, start_button, hero, spawn, smoke, UIheart, UIheartMin, state,
-        message,
+    let gameScene, gameOverScene, isFirstPlay = true, start_button, hero,
+        spawn, smoke, UIheart, UIheartMin, state, scores, end_text, start_logo,
         enemies = [], bullets = [], healthBar, score, lastHitButton = 2,
-        customFieldHeight = (window.innerWidth < window.innerHeight ? window.innerWidth : window.innerHeight);
-    let timer = 1;
+        customFieldHeight = (window.innerWidth < window.innerHeight ? window.innerWidth : window.innerHeight),
+        timer = 1;
     //new stuff
     var emitter, parts_container, emitterPos;
 
@@ -84,6 +82,13 @@
             first_background.scale.set(customFieldHeight / first_background.height);
             first_background.position.set(window.innerWidth / 2, customFieldHeight / 2);
             preGameScene.addChild(first_background);
+            //start logo
+            start_logo = new Sprite(resources.start_logo.texture);
+            start_logo.anchor.set(0.5);
+            start_logo.position.set(window.innerWidth / 2, customFieldHeight / 2);
+            start_logo.alpha = 1;
+            preGameScene.addChild(start_logo);
+
             //start button
             start_button = new Sprite(resources["resources/base.json"].textures["start_btn.png"]);
             start_button.anchor.set(0.5);
@@ -113,8 +118,6 @@
             }
 
         }
-
-
         gameScene = new Container();
         app.stage.addChild(gameScene);
         if (isFirstPlay)
@@ -256,13 +259,13 @@
         gameScene.addChild(score);
         score.renderable = 1;
 
-        let info = innerHeight + " x " + innerWidth + " : " + customFieldHeight;
-        let screen_info = new Text(info, {fill: "white", fontSize: 12});
-        screen_info.data = 0;
-        screen_info.anchor.set(0.5);
-        screen_info.position.set(window.innerWidth - screen_info.width, 15);
-        gameScene.addChild(screen_info);
-        screen_info.renderable = 1;
+        // let info = innerHeight + " x " + innerWidth + " : " + customFieldHeight;
+        // let screen_info = new Text(info, {fill: "white", fontSize: 12});
+        // screen_info.data = 0;
+        // screen_info.anchor.set(0.5);
+        // screen_info.position.set(window.innerWidth - screen_info.width, 15);
+        // gameScene.addChild(screen_info);
+        // screen_info.renderable = 1;
 
 //Game Over
         gameOverScene = new Container();
@@ -301,7 +304,7 @@
             healthBar.removeChild(innerBar);
             healthBar.removeChild(outerBar);
             gameScene.removeChild(score);
-            gameScene.removeChild(screen_info);
+            // gameScene.removeChild(screen_info);
             gameScene.removeChild(parts_container);
             gameScene.removeChild(smoke);
             gameScene.removeChild(spawn);
@@ -310,7 +313,7 @@
             gameOverScene.removeChild(end_background);
             gameOverScene.removeChild(reached_lvl);
             gameOverScene.removeChild(restart_button);
-            gameOverScene.removeChild(message);
+            gameOverScene.removeChild(scores);
             app.stage.removeChild(gameOverScene);
             isFirstPlay = false;
             setup();
@@ -330,15 +333,25 @@
         gameOverScene.addChild(restart_button);
 
         //TEXT
-        let style = new TextStyle({
+        let style1 = new TextStyle({
             fontFamily: "Futura",
             fontSize: 64,
             fill: "white"
         });
-        message = new Text(score.data, style);
-        message.anchor.set(0.5);
-        message.position.set(window.innerWidth / 2 - 212, customFieldHeight / 2 - 70);
-        gameOverScene.addChild(message);
+        scores = new Text(score.data, style1);
+        scores.anchor.set(0.5);
+        scores.position.set(window.innerWidth / 2 - 212, customFieldHeight / 2 - 70);
+        gameOverScene.addChild(scores);
+
+        let style2 = new TextStyle({
+            fontFamily: "sans-serif",
+            fontSize: 40,
+            fill: "black"
+        });
+        end_text = new Text("汝堂堂陈塘关\n总兵之子，\n不过尔尔。", style2);
+        end_text.anchor.set(0.5);
+        end_text.position.set(window.innerWidth / 2 + 35, customFieldHeight / 2 - 50);
+        gameOverScene.addChild(end_text);
 
 
 //Buttons
@@ -581,7 +594,7 @@
                 UIheartMin.visible = true;
                 UIheart.visible = false;
 
-                healthBar.outer.width -= 1;
+                healthBar.outer.width -= 1.2;
                 UIheartMin.alpha -= (UIheartMin.alpha >= 0.05 ? 0.05 : -0.9);
 
             } else {
@@ -590,17 +603,18 @@
                 UIheartMin.alpha = 1;
                 hero.alpha = 1;
             }
-            //Losing
+            //Ending
             if (healthBar.outer.width <= 0) {
-                message.text = score.data;
+                scores.text = score.data;
+                if (score.data < 10)
+                    end_text.text = "汝堂堂陈塘关\n总兵之子，\n不过尔尔。";
+                else if (score.data >= 10 && score.data < 30)
+                    end_text.text = "雕虫小技，\n不足为虑也。";
+                else if (score.data >= 30)
+                    end_text.text = "没想到你还有点\n本事，我海底龙\n宫无穷无尽，\n看你能得意到\n什么时候！";
                 state = end;
             }
             //Winning
-            if (score.data >= 55 && enemies.length === 0) {
-                message.text = "You won!";
-
-                state = end;
-            }
 
             //Bullets handling
             bullets.forEach(function (bullet, bullet_index) {
