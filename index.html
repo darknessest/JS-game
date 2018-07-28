@@ -51,11 +51,11 @@
         .add("resources/base.json")
         .add("resources/smoke.json")
         .add("resources/explosion.json")
-        // .add("background", "resources/background.jpg")
-        // .add("end_background", "resources/end_background.png")
+        .add("background", "resources/background.jpg")
+        .add("end_background", "resources/end_background.png")
         // .add("restart", "resources/end_restart.png")
         // .add("end_score", "resources/end_score.png")
-        // .add("start_background", "resources/start_background.png")
+        .add("start_background", "resources/start_background.png")
         // .add("start", "resources/start_btn.png")
         .load(setup);
 
@@ -76,7 +76,7 @@
             //start background
             let preGameScene = new Container();
             app.stage.addChild(preGameScene);
-            let first_background = new Sprite(resources["resources/base.json"].textures["start_background.png"]);
+            let first_background = new Sprite(resources.start_background.texture);
             if (customFieldHeight === window.innerHeight)
                 first_background.anchor.set(0.5);
             else
@@ -120,7 +120,7 @@
         if (isFirstPlay)
             gameScene.visible = false;
 // Background
-        let background = new Sprite(resources["resources/base.json"].textures["background.jpg"]);
+        let background = new Sprite(resources.background.texture);
         if (customFieldHeight === window.innerHeight)
             background.anchor.set(0.5);
         else
@@ -269,7 +269,7 @@
         app.stage.addChild(gameOverScene);
         gameOverScene.visible = false;
         //background
-        let end_background = new Sprite(resources["resources/base.json"].textures["end_background.png"]);
+        let end_background = new Sprite(resources.end_background.texture);
         end_background.anchor.set(0.5);
         end_background.position.set(window.innerWidth / 2, customFieldHeight / 2);
         gameOverScene.addChild(end_background);
